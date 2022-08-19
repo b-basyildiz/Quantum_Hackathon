@@ -4,6 +4,11 @@ import itertools
 from random import choice, sample
 from math import sqrt, ceil
 
+pygame.init()
+pygame.font.init()
+font = pygame.font.Font(pygame.font.get_default_font(),32)
+
+
 def dist(a, b):
     return sqrt((a[0]-b[0])**2+(a[1]-b[1])**2)
 
@@ -34,6 +39,7 @@ class Creature:
         offspring.team = self.team if numGenes[True] == numGenes[False] else \
             numGenes[True] > numGenes[False]
         offspring.group = self.group
+        print(f'new creature: {offspring.id}')
 
         return offspring
 
@@ -45,18 +51,28 @@ class Creature:
         self.group = not self.group
 
 class Entity:
-    def __init__(self, team: bool,size, group = None, posx = 0, posy = 0):
-        self.creature = Creature(team)
+    def __init__(self, team: bool,size, group = None, posx = 0, posy = 0, genes = (None, None, None)):
+        self.creature = Creature(team, a = genes[0], b = genes[1], c = genes[2])
         if group != None:
             self.creature.group = group
         self.posx = posx
         self.posy = posy
         self.size = size
+        self.fill = [0,0,255] if team else [255,0,0,0]
+        aText = 'T' if genes[0] else 'N' if genes[0] == None else 'F'
+        bText = 'T' if genes[1] else 'N' if genes[1] == None else 'F'
+        cText = 'T' if genes[2] else 'N' if genes[2] == None else 'F'
+        self.idLabel = font.render(aText+bText+cText, True, (0,255,0),(0,0,255))
     def makeFromCreature(self, creature, size, posx = 0, posy = 0):
         self.creature = creature
         self.posx = posx
         self.posy = posy
         self.size = size
+        aText = 'T' if creature.genes['a'] else 'N' if creature.genes['a'] == None else 'F'
+        bText = 'T' if creature.genes['b'] else 'N' if creature.genes['b'] == None else 'F'
+        cText = 'T' if creature.genes['c'] else 'N' if creature.genes['c'] == None else 'F'
+        self.fill = [0, 0, 255] if creature.team else [255, 0, 0]
+        self.idLabel = font.render(aText+bText+cText, True, (0, 255, 0), (0, 0, 255))
 
     def setPos(self, posx = 0, posy = 0):
         self.posx = posx
@@ -72,8 +88,8 @@ class Manager:
         self.numEntities = 0
         self.entitySize = screenWidth/(2*maxRowSize) - screenWidth/30
 
-    def addEntity(self, team, group):
-        self.entities.append(Entity(team, self.entitySize, group=group))
+    def addEntity(self, team, group, genes = (None, None, None)):
+        self.entities.append(Entity(team, self.entitySize, group=group, genes = genes))
         self.numEntities += 1
         self.arrangeEntities()
 
@@ -85,9 +101,17 @@ class Manager:
         self.arrangeEntities()
 
     def drawEntities(self):
+
         for entity in self.entities:
-            pygame.draw.circle(self.screen, (0, 0, 255) if entity.creature.team \
-                else (255, 0, 0), (entity.posx, entity.posy), entity.size)
+            entitySurface = pygame.Surface((self.entitySize*2, self.entitySize*2))
+            entitySurface.fill((255,255,255))
+            entitySurface.set_alpha(50)
+            pygame.draw.circle(entitySurface, tuple(entity.fill), (self.entitySize, self.entitySize), entity.size)
+            pygame.draw.circle(self.screen, tuple(entity.fill) if entity.creature.age > 0 else (247, 255, 0), (entity.posx, entity.posy), self.entitySize, ceil(self.entitySize/10))
+            tr = entity.idLabel.get_rect()
+            tr.center = (entity.posx, entity.posy)
+            self.screen.blit(entitySurface, (entity.posx-self.entitySize,entity.posy-self.entitySize))
+            self.screen.blit(entity.idLabel, tr)
     
     def getArrangement(self):
         arrangement = []
@@ -176,27 +200,86 @@ class Manager:
                 falseBreeders[1].creature))
         self.arrangeEntities()
 
+    def kill(self):
+        trueEntities = []
+        falseEntities = []
+        for ii in range(len(self.entities)):
+            if self.entities[ii].creature.group:
+                trueEntities.append(ii)
+            else:
+                falseEntities.append(ii)
+        trueWeightedElements = []
+        falseWeightedElements = []
+        for ii in trueEntities:
+            trueWeightedElements.extend([ii]*(self.entities[ii].creature.age))
+        for ii in falseEntities:
+            falseWeightedElements.extend([ii]*(self.entities[ii].creature.age))
+        tInd = None
+        if trueWeightedElements: 
+            ind = choice(trueWeightedElements)
+            tInd = ind
+            print(self.entities[ind].fill)
+            self.entities[ind].fill[1] = 255
+            print(self.entities[ind].fill)
+            self.refreshScreen()
+            time.sleep(3)
+            print(f'killed true creature: {self.entities[ind].creature.id}\nGroup: \
+                {self.entities[ind].creature.group}\nteam: {self.entities[ind].creature.team}')
+            del self.entities[ind]
+            self.numEntities -= 1
+
+
+        if falseWeightedElements:
+            ind = choice(falseWeightedElements)
+            if tInd != None and ind > tInd:
+                ind -= 1
+            self.entities[ind].fill[1] = 255
+            self.refreshScreen()
+            time.sleep(3)
+            print(f'killed false creature: {self.entities[ind].creature.id}\nGroup: \
+                {self.entities[ind].creature.group}\nteam: {self.entities[ind].creature.team}')
+
+            del self.entities[ind]
+            self.numEntities -= 1
+    
+    def age(self):
+        for ii in self.entities:
+            ii.creature.age += 1
+            ii.fill = [kk - 10 * ii.creature.age \
+                if kk - 10 * ii.creature.age >= 0 else 0 \
+                    for kk in ii.fill]
+            print(ii.fill)
+
+    def refreshScreen(self):
+        self.screen.fill((255, 255, 255))
+        self.arrangeEntities()
+        self.drawEntities()
+        pygame.display.flip()
+        
+
+
 
 def main():
 
     screenWidth = 600
     screenHeight = 900
 
-    pygame.init()
+    #pygame.init()
     screen = pygame.display.set_mode((screenWidth, screenHeight))
 
     manager = Manager(screen, screenWidth, screenHeight)
 
-    manager.addEntity(True, group=True)
-    manager.addEntity(True, group=True)
-    manager.addEntity(True, group=True)
-    manager.addEntity(True, group=True)
-    manager.addEntity(True, group=True)
-    manager.addEntity(False, group=False)
-    manager.addEntity(False, group=False)
-    manager.addEntity(False, group=False)
-    manager.addEntity(False, group=False)
-    manager.addEntity(False, group=False)
+    manager.addEntity(True, group=True, genes = (True, True, True))
+    manager.addEntity(True, group=True, genes = (True, True, None))
+    manager.addEntity(True, group=True, genes = (True, True, None))
+    manager.addEntity(True, group=True, genes = (True, None, None))
+    manager.addEntity(True, group=True, genes = (True, None, None))
+    manager.addEntity(False, group=False, genes = (False, False, False))
+    manager.addEntity(False, group=False, genes = (False, False, None))
+    manager.addEntity(False, group=False, genes = (False, False, None))
+    manager.addEntity(False, group=False, genes = (False, None, None))
+    manager.addEntity(False, group=False, genes = (False, None, None))
+    manager.age()
 
 
 
@@ -232,19 +315,19 @@ def main():
                 for ii in manager.entities:
                     if sqrt((ii.posx-pos[0])**2+(ii.posy-pos[1])**2) < blobWidth/2+blobGap:
                         if ii == clicked:
-                            print(clicked)
+                            print(clicked.creature.team)
                             if ii.creature.team == currentTurn:
                                 ii.creature.move()
                                 currentTurn = not currentTurn
                                 if moveCounter:
+                                    manager.age()
                                     manager.breed()
+                                    manager.kill()
                                 moveCounter = not moveCounter
                 clicked = None
 
 
-        screen.fill((255, 255, 255))
-        manager.arrangeEntities()
-        manager.drawEntities()
+        manager.refreshScreen()
         #for ii in range(len(trueArrangement)):
         #    pygame.draw.circle(screen, (0, 0, 255), (trueArrangement[ii][0], trueArrangement[ii][1]), blobWidth/2)
         #   pygame.draw.circle(screen, (255, 0, 0), (falseArrangement[ii][0], falseArrangement[ii][1]), blobWidth/2)
