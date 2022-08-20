@@ -57,12 +57,20 @@ class Entity:
             self.creature.group = group
         self.posx = posx
         self.posy = posy
+        self.lastposx = None
+        self.lastposy = None
         self.size = size
         self.fill = [0,0,255] if team else [255,0,0,0]
         aText = 'T' if genes[0] else 'N' if genes[0] == None else 'F'
         bText = 'T' if genes[1] else 'N' if genes[1] == None else 'F'
         cText = 'T' if genes[2] else 'N' if genes[2] == None else 'F'
         self.idLabel = font.render(aText+bText+cText, True, (0,255,0),(0,0,255))
+        # image credit: https://www.pngkey.com/png/full/822-8224774_cow-clipart-vector-cow-cartoon-images-transparent.png
+        self.imageSprite = pygame.image.load('cow.png').convert_alpha() # dimensions 640x480 in original
+        scale = 7
+        self.imageDimension = (640/scale, 480/scale)
+        self.imageSprite = pygame.transform.scale(self.imageSprite, self.imageDimension)
+
     def makeFromCreature(self, creature, size, posx = 0, posy = 0):
         self.creature = creature
         self.posx = posx
@@ -75,11 +83,39 @@ class Entity:
         self.idLabel = font.render(aText+bText+cText, True, (0, 255, 0), (0, 0, 255))
 
     def setPos(self, posx = 0, posy = 0):
+        self.lastposx = self.posx
+        self.lastposy = self.posy
         self.posx = posx
         self.posy = posy
 
+    def getPos(self):
+        return self.posx,self.posy
+
+    def getPosRange(self):
+        # solve for the line between the two positions
+        inverseSpeed = 10
+        # if infinite slope
+        if self.posx == self.lastposx:
+            print('DEBUG: no x movement, avoided "div by zero"')
+            positions = [(self.lastposx,self.lastposy)]
+            totalYDist = self.posy - self.lastposy
+            for i in range(inverseSpeed):
+                positions.append((self.lastposx, positions[-1][1]+totalYDist/inverseSpeed))
+        # get length of the line, subdivide
+        else:
+            slope = (self.posy-self.lastposy)/(self.posx-self.lastposx)
+            yIntercept = self.posy - slope*self.posx
+            positions = [(self.lastposx, self.lastposy)]
+            totalXDist = self.posx-self.lastposx
+            for i in range(inverseSpeed):
+                nextX = positions[-1][0] + totalXDist/inverseSpeed
+                positions.append((nextX, slope*nextX + yIntercept))
+        return positions
+
 class Manager:
     def __init__(self, screen, screenWidth, screenHeight, maxRowSize = 5):
+        self.clock = pygame.time.Clock() # variables for running the game
+
         self.entities = []
         self.screen = screen
         self.maxRowSize = maxRowSize
@@ -106,10 +142,13 @@ class Manager:
             entitySurface = pygame.Surface((self.entitySize*2, self.entitySize*2))
             entitySurface.fill((255,255,255))
             entitySurface.set_alpha(50)
+            #pygame.draw.circle(entitySurface, tuple(entity.fill), (self.entitySize, self.entitySize), entity.size)
+            #pygame.draw.circle(self.screen, tuple(entity.fill) if entity.creature.age > 0 else (247, 255, 0), (entity.posx, entity.posy), self.entitySize, ceil(self.entitySize/10))
             pygame.draw.circle(entitySurface, tuple(entity.fill), (self.entitySize, self.entitySize), entity.size)
             pygame.draw.circle(self.screen, tuple(entity.fill) if entity.creature.age > 0 else (247, 255, 0), (entity.posx, entity.posy), self.entitySize, ceil(self.entitySize/10))
             tr = entity.idLabel.get_rect()
-            tr.center = (entity.posx, entity.posy)
+            tr.center = (entity.posx, entity.posy+entity.imageDimension[1])
+            self.screen.blit(entity.imageSprite, (entity.posx-entity.imageDimension[0]/2, entity.posy-entity.imageDimension[1]/2))
             self.screen.blit(entitySurface, (entity.posx-self.entitySize,entity.posy-self.entitySize))
             self.screen.blit(entity.idLabel, tr)
     
@@ -176,7 +215,23 @@ class Manager:
             newPositions[best] = ii
 
         for ii in range(self.numEntities):
+            currPos = self.entities[ii].getPos()
+            if currPos == (newPositions[ii][0], newPositions[ii][1]):
+                continue
             self.entities[ii].setPos(newPositions[ii][0], newPositions[ii][1])
+            # implement animation; for now, just slide cows across the screen
+            posRange = self.entities[ii].getPosRange()
+            for pos in posRange:
+                self.entities[ii].setPos(pos[0],pos[1])
+                #self.refreshScreen()
+                self.drawScreen()
+                self.clock.tick(200)
+
+            #if currPos != (newPositions[ii][0], newPositions[ii][1]):
+            #    print(currPos)
+            #    print((newPositions[ii][0], newPositions[ii][1]))
+            #    print('blob moved!')
+            #    exit(1)
 
     def breed(self):
         trueEntities = []
@@ -255,7 +310,12 @@ class Manager:
         self.arrangeEntities()
         self.drawEntities()
         pygame.display.flip()
-        
+
+    def drawScreen(self):
+        self.screen.fill((255, 255, 255))
+        #self.arrangeEntities()
+        self.drawEntities()
+        pygame.display.flip()       
 
 
 
@@ -299,6 +359,8 @@ def main():
     moveCounter = False
 
     while(True):
+
+        manager.clock.tick(3) 
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT: sys.exit()
