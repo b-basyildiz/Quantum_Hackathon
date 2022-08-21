@@ -309,7 +309,7 @@ class Manager:
                 creature.setPos(pos[0],pos[1])
                 self.drawScreen()
                 self.clock.tick(TICK_RATE)
-        time.sleep(5)
+        time.sleep(2)
 
     def kill(self):
         trueEntities = []
