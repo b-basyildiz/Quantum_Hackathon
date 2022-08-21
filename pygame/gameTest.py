@@ -8,6 +8,14 @@ pygame.init()
 pygame.font.init()
 font = pygame.font.Font(pygame.font.get_default_font(),32)
 
+PLAYER_COLOR = (63+50,0+50,15+50)
+COMPUTER_COLOR = (252,90,141)
+FONT_COLOR = (200,200,200)
+#NAMEPLATE_COLOR = (50,42,50)
+NAMEPLATE_COLOR = (0,0,0)
+BACKGROUND_COLOR = (100,200,100)
+
+TICK_RATE = 200
 
 def dist(a, b):
     return sqrt((a[0]-b[0])**2+(a[1]-b[1])**2)
@@ -60,16 +68,17 @@ class Entity:
         self.lastposx = None
         self.lastposy = None
         self.size = size
-        self.fill = [0,0,255] if team else [255,0,0,0]
+        self.fill = PLAYER_COLOR if team else COMPUTER_COLOR
         aText = 'T' if genes[0] else 'N' if genes[0] == None else 'F'
         bText = 'T' if genes[1] else 'N' if genes[1] == None else 'F'
         cText = 'T' if genes[2] else 'N' if genes[2] == None else 'F'
-        self.idLabel = font.render(aText+bText+cText, True, (0,255,0),(0,0,255))
+        self.idLabel = font.render(aText+bText+cText, True, FONT_COLOR, NAMEPLATE_COLOR)
         # image credit: https://www.pngkey.com/png/full/822-8224774_cow-clipart-vector-cow-cartoon-images-transparent.png
         self.imageSprite = pygame.image.load('cow.png').convert_alpha() # dimensions 640x480 in original
         scale = 7
         self.imageDimension = (640/scale, 480/scale)
         self.imageSprite = pygame.transform.scale(self.imageSprite, self.imageDimension)
+        self.imageSprite.fill(self.fill, special_flags=pygame.BLEND_ADD) # has to be duplicated, hackathon lol
 
     def makeFromCreature(self, creature, size, posx = 0, posy = 0):
         self.creature = creature
@@ -79,8 +88,13 @@ class Entity:
         aText = 'T' if creature.genes['a'] else 'N' if creature.genes['a'] == None else 'F'
         bText = 'T' if creature.genes['b'] else 'N' if creature.genes['b'] == None else 'F'
         cText = 'T' if creature.genes['c'] else 'N' if creature.genes['c'] == None else 'F'
-        self.fill = [0, 0, 255] if creature.team else [255, 0, 0]
+        self.fill = PLAYER_COLOR if creature.team else COMPUTER_COLOR
         self.idLabel = font.render(aText+bText+cText, True, (0, 255, 0), (0, 0, 255))
+        self.imageSprite = pygame.image.load('cow.png').convert_alpha() # dimensions 640x480 in original
+        scale = 7
+        self.imageDimension = (640/scale, 480/scale)
+        self.imageSprite = pygame.transform.scale(self.imageSprite, self.imageDimension)
+        self.imageSprite.fill(self.fill, special_flags=pygame.BLEND_ADD) # has to be duplicated, hackathon lol
 
     def setPos(self, posx = 0, posy = 0):
         self.lastposx = self.posx
@@ -115,6 +129,10 @@ class Entity:
 class Manager:
     def __init__(self, screen, screenWidth, screenHeight, maxRowSize = 5):
         self.clock = pygame.time.Clock() # variables for running the game
+        self.skullAndBones = pygame.image.load('skull-and-crossbones.png') # 320x308 https://www.freeiconspng.com/images/skull-and-crossbones-png
+        scale = 4
+        self.skullAndBonesImageDimension = (320/scale, 308/scale)
+        self.skullAndBones = pygame.transform.scale(self.skullAndBones, self.skullAndBonesImageDimension)
 
         self.entities = []
         self.screen = screen
@@ -140,17 +158,35 @@ class Manager:
 
         for entity in self.entities:
             entitySurface = pygame.Surface((self.entitySize*2, self.entitySize*2))
-            entitySurface.fill((255,255,255))
+            #entitySurface.fill((255,255,255))
+            entitySurface.fill(BACKGROUND_COLOR)
             entitySurface.set_alpha(50)
             #pygame.draw.circle(entitySurface, tuple(entity.fill), (self.entitySize, self.entitySize), entity.size)
             #pygame.draw.circle(self.screen, tuple(entity.fill) if entity.creature.age > 0 else (247, 255, 0), (entity.posx, entity.posy), self.entitySize, ceil(self.entitySize/10))
-            pygame.draw.circle(entitySurface, tuple(entity.fill), (self.entitySize, self.entitySize), entity.size)
-            pygame.draw.circle(self.screen, tuple(entity.fill) if entity.creature.age > 0 else (247, 255, 0), (entity.posx, entity.posy), self.entitySize, ceil(self.entitySize/10))
-            tr = entity.idLabel.get_rect()
-            tr.center = (entity.posx, entity.posy+entity.imageDimension[1])
+            pygame.draw.circle(self.screen, tuple(entity.fill) , (entity.posx, entity.posy), self.entitySize, ceil(self.entitySize/10))
+
+
+            # nameplate
+            #tr = entity.idLabel.get_rect()
+            #tr.center = (entity.posx, entity.posy+entity.imageDimension[1])
+            pygame.draw.rect(self.screen, NAMEPLATE_COLOR, pygame.Rect(entity.posx-30, entity.posy+entity.imageDimension[1]/3*2, 60, 30))
+            pygame.draw.rect(self.screen, FONT_COLOR, pygame.Rect(entity.posx-27, entity.posy+entity.imageDimension[1]/3*2+3, 54, 24))
+
+            # fill colors for genes
+            pygame.draw.rect(self.screen, PLAYER_COLOR if entity.creature.genes['a'] else FONT_COLOR if entity.creature.genes['a'] == None else COMPUTER_COLOR, 
+                             pygame.Rect(entity.posx-27, entity.posy+entity.imageDimension[1]/3*2+3, 54/3,24))
+            pygame.draw.rect(self.screen, PLAYER_COLOR if entity.creature.genes['b'] else FONT_COLOR if entity.creature.genes['b'] == None else COMPUTER_COLOR, 
+                             pygame.Rect(entity.posx-27+54/3, entity.posy+entity.imageDimension[1]/3*2+3, 54/3,24))
+            pygame.draw.rect(self.screen, PLAYER_COLOR if entity.creature.genes['c'] else FONT_COLOR if entity.creature.genes['c'] == None else COMPUTER_COLOR, 
+                             pygame.Rect(entity.posx-27+54/3*2, entity.posy+entity.imageDimension[1]/3*2+3, 54/3,24))
+
+            # borders for nameplate
+            pygame.draw.rect(self.screen, NAMEPLATE_COLOR, pygame.Rect(entity.posx-27+54/3, entity.posy+entity.imageDimension[1]/3*2, 3, 30))
+            pygame.draw.rect(self.screen, NAMEPLATE_COLOR, pygame.Rect(entity.posx-27+54/3*2, entity.posy+entity.imageDimension[1]/3*2, 3, 30))
+
             self.screen.blit(entity.imageSprite, (entity.posx-entity.imageDimension[0]/2, entity.posy-entity.imageDimension[1]/2))
             self.screen.blit(entitySurface, (entity.posx-self.entitySize,entity.posy-self.entitySize))
-            self.screen.blit(entity.idLabel, tr)
+            #self.screen.blit(entity.idLabel, tr)
     
     def getArrangement(self):
         arrangement = []
@@ -225,7 +261,7 @@ class Manager:
                 self.entities[ii].setPos(pos[0],pos[1])
                 #self.refreshScreen()
                 self.drawScreen()
-                self.clock.tick(200)
+                self.clock.tick(TICK_RATE)
 
             #if currPos != (newPositions[ii][0], newPositions[ii][1]):
             #    print(currPos)
@@ -248,12 +284,32 @@ class Manager:
         if len(falseEntities) >= 2:
             falseBreeders = sample(falseEntities, 2)
         if trueBreeders:
+            # do breeding animation
+            self.animateBreed(True, trueBreeders[0], trueBreeders[1])
             self.addEntityFromCreature(Creature.breed(trueBreeders[0].creature, \
                 trueBreeders[1].creature))
         if falseBreeders:
+            self.animateBreed(False, falseBreeders[0], falseBreeders[1])
             self.addEntityFromCreature(Creature.breed(falseBreeders[0].creature, \
                 falseBreeders[1].creature))
         self.arrangeEntities()
+
+    def animateBreed(self, group, creature1, creature2):
+        print(creature1, creature2)
+        for i,creature in enumerate([creature1, creature2]):
+            destx = 300 + i*50
+            if group:
+                desty = 460
+            else:
+                desty = 440
+            #desty = 460 if group else 440
+            creature.setPos(destx, desty)
+            posRange = creature.getPosRange()
+            for pos in posRange:
+                creature.setPos(pos[0],pos[1])
+                self.drawScreen()
+                self.clock.tick(TICK_RATE)
+        time.sleep(5)
 
     def kill(self):
         trueEntities = []
@@ -274,10 +330,15 @@ class Manager:
             ind = choice(trueWeightedElements)
             tInd = ind
             print(self.entities[ind].fill)
-            self.entities[ind].fill[1] = 255
+            #self.entities[ind].fill[1] = 255
             print(self.entities[ind].fill)
-            self.refreshScreen()
-            time.sleep(3)
+            #self.refreshScreen()
+
+            self.drawImage(self.skullAndBones, (self.entities[ind].posx-self.skullAndBonesImageDimension[0]/2, self.entities[ind].posy-self.skullAndBonesImageDimension[0]/2))
+
+            time.sleep(2)
+
+            #self.clock.tick(600)
             print(f'killed true creature: {self.entities[ind].creature.id}\nGroup: \
                 {self.entities[ind].creature.group}\nteam: {self.entities[ind].creature.team}')
             del self.entities[ind]
@@ -288,9 +349,12 @@ class Manager:
             ind = choice(falseWeightedElements)
             if tInd != None and ind > tInd:
                 ind -= 1
-            self.entities[ind].fill[1] = 255
-            self.refreshScreen()
-            time.sleep(3)
+            #self.entities[ind].fill[1] = 255
+            #self.refreshScreen()
+
+            self.drawImage(self.skullAndBones, (self.entities[ind].posx-self.skullAndBonesImageDimension[0]/2, self.entities[ind].posy-self.skullAndBonesImageDimension[0]/2))
+            time.sleep(2)
+            #self.clock.tick(600)
             print(f'killed false creature: {self.entities[ind].creature.id}\nGroup: \
                 {self.entities[ind].creature.group}\nteam: {self.entities[ind].creature.team}')
 
@@ -306,15 +370,20 @@ class Manager:
             print(ii.fill)
 
     def refreshScreen(self):
-        self.screen.fill((255, 255, 255))
+        self.screen.fill(BACKGROUND_COLOR)
         self.arrangeEntities()
         self.drawEntities()
         pygame.display.flip()
 
     def drawScreen(self):
-        self.screen.fill((255, 255, 255))
-        #self.arrangeEntities()
+        self.screen.fill(BACKGROUND_COLOR)
         self.drawEntities()
+        pygame.display.flip()       
+
+    def drawImage(self, image, pos):
+        self.screen.fill(BACKGROUND_COLOR)
+        self.drawEntities()
+        self.screen.blit(image, pos)#(self.entities[ind].posx, self.entities[ind].posy))
         pygame.display.flip()       
 
 
