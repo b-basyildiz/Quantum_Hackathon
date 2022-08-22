@@ -299,9 +299,9 @@ class Manager:
         for i,creature in enumerate([creature1, creature2]):
             destx = 300 + i*50
             if group:
-                desty = 460
+                desty = 360
             else:
-                desty = 440
+                desty = 240
             #desty = 460 if group else 440
             creature.setPos(destx, desty)
             posRange = creature.getPosRange()
@@ -449,6 +449,8 @@ def main():
                             print(clicked.creature.team)
                             if ii.creature.team == currentTurn:
                                 ii.creature.move()
+                                manager.refreshScreen()
+                                time.sleep(2)
                                 currentTurn = not currentTurn
                                 if moveCounter:
                                     manager.age()
