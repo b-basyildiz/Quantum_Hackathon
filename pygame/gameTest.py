@@ -3,6 +3,19 @@ import time
 import itertools
 from random import choice, sample
 from math import sqrt, ceil
+from ai import AI
+from cost_function import cost_function
+
+from creature import *
+
+#### FOR ME TO ADD
+# FENCE
+## LOVE MAKING ANIMATION
+## PLAYER TURN DISTINCTION
+# GRAPH VIS BUTTON
+
+IS_AI_GAME = True
+
 
 pygame.init()
 pygame.font.init()
@@ -25,43 +38,43 @@ def dist(a, b):
     return sqrt((a[0]-b[0])**2+(a[1]-b[1])**2)
 
 
-class Creature:
-
-    __id_iter__ = itertools.count()
-    def __init__(self, team: bool, a = None, b = None, c = None):
-        self.team = team
-        self.group = team
-        self.genes = {'a': a, 'b': b, 'c': c}
-        self.id = next(Creature.__id_iter__)
-        self.age = 0
-
-    def breed(self, other):
-        offspring = Creature(self.team)
-        for ii in self.genes:
-            if self.genes[ii] != None and other.genes[ii] == None:
-                offspring.genes[ii] = self.genes[ii]
-            elif self.genes[ii] == None and other.genes[ii] != None:
-                offspring.genes[ii] = other.genes[ii]
-            elif self.genes[ii] != None and other.genes[ii] != None:
-                offspring.genes[ii] = choice([self.genes[ii], other.genes[ii]])
-        numGenes = {True: 0, False: 0}
-        for ii in offspring.genes:
-            if offspring.genes[ii] != None:
-                numGenes[offspring.genes[ii]] += 1
-        offspring.team = self.team if numGenes[True] == numGenes[False] else \
-            numGenes[True] > numGenes[False]
-        offspring.group = self.group
-        print(f'new creature: {offspring.id}')
-
-        return offspring
-
-    def print(self):
-        print(f'creature id: {self.id}\nteam: {self.team}\ngenes: \
-            {self.genes}\ngroup: {self.group}\nage: {self.age}\n')
-
-    def move(self):
-        self.group = not self.group
-
+#class Creature:
+#
+#    __id_iter__ = itertools.count()
+#    def __init__(self, team: bool, a = None, b = None, c = None):
+#        self.team = team
+#        self.group = team
+#        self.genes = {'a': a, 'b': b, 'c': c}
+#        self.id = next(Creature.__id_iter__)
+#        self.age = 0
+#
+#    def breed(self, other):
+#        offspring = Creature(self.team)
+#        for ii in self.genes:
+#            if self.genes[ii] != None and other.genes[ii] == None:
+#                offspring.genes[ii] = self.genes[ii]
+#            elif self.genes[ii] == None and other.genes[ii] != None:
+#                offspring.genes[ii] = other.genes[ii]
+#            elif self.genes[ii] != None and other.genes[ii] != None:
+#                offspring.genes[ii] = choice([self.genes[ii], other.genes[ii]])
+#        numGenes = {True: 0, False: 0}
+#        for ii in offspring.genes:
+#            if offspring.genes[ii] != None:
+#                numGenes[offspring.genes[ii]] += 1
+#        offspring.team = self.team if numGenes[True] == numGenes[False] else \
+#            numGenes[True] > numGenes[False]
+#        offspring.group = self.group
+#        print(f'new creature: {offspring.id}')
+#
+#        return offspring
+#
+#    def print(self):
+#        print(f'creature id: {self.id}\nteam: {self.team}\ngenes: \
+#            {self.genes}\ngroup: {self.group}\nage: {self.age}\n')
+#
+#    def move(self):
+#        self.group = not self.group
+#
 class Entity:
     def __init__(self, team: bool,size, group = None, posx = 0, posy = 0, genes = (None, None, None)):
         self.creature = Creature(team, a = genes[0], b = genes[1], c = genes[2])
@@ -133,11 +146,17 @@ class Entity:
 class Manager:
     def __init__(self, screen, screenWidth, screenHeight, maxRowSize = 5):
         self.clock = pygame.time.Clock() # variables for running the game
+        self.heart = pygame.image.load('heart.png') # 320x290 https://www.freeiconspng.com/images/heart-png
+        scale = 8
+        self.heartImageDimension = (320/scale, 290/scale)
+        self.heart = pygame.transform.scale(self.heart, self.heartImageDimension)
+
         self.skullAndBones = pygame.image.load('skull-and-crossbones.png') # 320x308 https://www.freeiconspng.com/images/skull-and-crossbones-png
         scale = 4
         self.skullAndBonesImageDimension = (320/scale, 308/scale)
         self.skullAndBones = pygame.transform.scale(self.skullAndBones, self.skullAndBonesImageDimension)
-        self.titleFont = pygame.font.Font(pygame.font.get_default_font(),50)
+
+        self.titleFont = pygame.font.Font(pygame.font.get_default_font(),32)
         self.phaseMessage = self.titleFont.render('', True, FONT_COLOR, BACKGROUND_COLOR)
 
         self.entities = []
@@ -197,7 +216,7 @@ class Manager:
 
         # phase of game
         tr = self.phaseMessage.get_rect()
-        tr.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT-100)#-SCREEN_HEIGHT*.95)
+        tr.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT-150)#-SCREEN_HEIGHT*.95)
         self.screen.blit(self.phaseMessage, tr)
     
     def getArrangement(self):
@@ -324,11 +343,12 @@ class Manager:
                 creature.setPos(pos[0],pos[1])
                 self.drawScreen()
                 self.clock.tick(TICK_RATE)
+        self.drawImage(self.heart, (creature1.posx, creature1.posy-50))
         time.sleep(2)
 
     def kill(self):
         
-        self.phaseMessage= self.titleFont.render('Death Phase', True, TITLE_FONT_COLOR, TITLE_BACKGROUND_COLOR)
+        self.phaseMessage = self.titleFont.render('Death Phase', True, TITLE_FONT_COLOR, TITLE_BACKGROUND_COLOR)
 
         trueEntities = []
         falseEntities = []
@@ -404,6 +424,38 @@ class Manager:
         self.screen.blit(image, pos)#(self.entities[ind].posx, self.entities[ind].posy))
         pygame.display.flip()       
 
+    def getMove(self):
+        creatures = [entity.creature for entity in self.entities]
+        ai = AI(creatures)
+
+        nodeToInt = {}
+        intToNode = {}
+        intCounter = 0
+
+        for ii in ai.graph.nodes:
+            nodeToInt[ii] = intCounter
+            intCounter += 1
+        for ii in nodeToInt:
+            intToNode[nodeToInt[ii]] = ii
+        optimalState, optimalScore = AI.optimizeBruteForce(ai.graph)
+
+
+        currentState = [int(creature.group) for creature in creatures]
+        orderedOptimalState = []
+        botIndices = []
+        for creature in creatures:
+            orderedOptimalState.append(optimalState[nodeToInt['X_('+str(creature.id)+')']])
+        for ii in range(len(creatures)):
+            if not creatures[ii].team:
+                botIndices.append(ii)
+        newState = cost_function(currentState, orderedOptimalState, botIndices)
+        print('Current State:',currentState, 'New State:', newState)
+        for ii in range(len(newState)):
+            if newState[ii] != currentState[ii]:
+                return creatures[ii]
+        print('something went wrong in getMove')
+        return None
+
 
 
 def main():
@@ -416,16 +468,24 @@ def main():
 
     manager = Manager(screen, screenWidth, screenHeight)
 
-    manager.addEntity(True, group=True, genes = (True, True, True))
-    manager.addEntity(True, group=True, genes = (True, True, None))
-    manager.addEntity(True, group=True, genes = (True, True, None))
-    manager.addEntity(True, group=True, genes = (True, None, None))
-    manager.addEntity(True, group=True, genes = (True, None, None))
-    manager.addEntity(False, group=False, genes = (False, False, False))
-    manager.addEntity(False, group=False, genes = (False, False, None))
-    manager.addEntity(False, group=False, genes = (False, False, None))
-    manager.addEntity(False, group=False, genes = (False, None, None))
-    manager.addEntity(False, group=False, genes = (False, None, None))
+
+    if IS_AI_GAME:
+        manager.addEntity(True, group=True, genes = (True, True, True))
+        manager.addEntity(True, group=True, genes = (True, True, None))
+        manager.addEntity(False, group=False, genes = (False, False, False))
+        manager.addEntity(False, group=False, genes = (False, False, None))
+
+    else:
+        manager.addEntity(True, group=True, genes = (True, True, True))
+        manager.addEntity(True, group=True, genes = (True, True, None))
+        manager.addEntity(True, group=True, genes = (True, True, None))
+        manager.addEntity(True, group=True, genes = (True, None, None))
+        manager.addEntity(True, group=True, genes = (True, None, None))
+        manager.addEntity(False, group=False, genes = (False, False, False))
+        manager.addEntity(False, group=False, genes = (False, False, None))
+        manager.addEntity(False, group=False, genes = (False, False, None))
+        manager.addEntity(False, group=False, genes = (False, None, None))
+        manager.addEntity(False, group=False, genes = (False, None, None))
     manager.age()
 
 
@@ -451,7 +511,11 @@ def main():
 
         for event in pygame.event.get():
 
-            manager.phaseMessage= manager.titleFont.render('Movement Phase', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
+            if currentTurn:
+                manager.phaseMessage= manager.titleFont.render('Brown to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
+            else:
+                manager.phaseMessage= manager.titleFont.render('Pink to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
+
             if event.type == pygame.QUIT: sys.exit()
 
 
@@ -469,9 +533,24 @@ def main():
                             print(clicked.creature.team)
                             if ii.creature.team == currentTurn:
                                 ii.creature.move()
+
+                                currentTurn = not currentTurn
+                                if currentTurn:
+                                    manager.phaseMessage= manager.titleFont.render('Brown to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
+                                elif IS_AI_GAME:
+                                    manager.phaseMessage= manager.titleFont.render('Quantum Cows deciding...', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
+                                else:
+                                    manager.phaseMessage= manager.titleFont.render('Pink to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
                                 manager.refreshScreen()
                                 time.sleep(2)
-                                currentTurn = not currentTurn
+                                if not currentTurn and IS_AI_GAME:
+                                    #manager.phaseMessage= manager.titleFont.render('Pink to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
+                                    print('Bot is Thinking')
+                                    manager.getMove().move()
+                                    manager.refreshScreen()
+                                    time.sleep(2)
+                                    currentTurn = not currentTurn
+                                    moveCounter = not moveCounter
                                 if moveCounter:
                                     manager.age()
                                     manager.breed()
