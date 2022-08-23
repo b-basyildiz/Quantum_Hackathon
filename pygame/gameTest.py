@@ -439,11 +439,12 @@ class Manager:
             intToNode[nodeToInt[ii]] = ii
         optimalState, optimalScore = AI.optimizeBruteForce(ai.graph)
 
-
         currentState = [int(creature.group) for creature in creatures]
         orderedOptimalState = []
         botIndices = []
         for creature in creatures:
+            print(nodeToInt)
+            print(entity.creature.id for entity in self.entities)
             orderedOptimalState.append(optimalState[nodeToInt['X_('+str(creature.id)+')']])
         for ii in range(len(creatures)):
             if not creatures[ii].team:
@@ -455,6 +456,16 @@ class Manager:
                 return creatures[ii]
         print('something went wrong in getMove')
         return None
+
+    def endCheck(self):
+        color = self.entities[0].creature.team
+        for entity in self.entities:
+            if entity.creature.team != color:
+                return False
+        return True 
+                
+      
+            
 
 
 
@@ -555,6 +566,17 @@ def main():
                                     manager.age()
                                     manager.breed()
                                     manager.kill()
+                                    if(manager.endCheck()):
+                                        print("End game")
+                                        if(manager.entities[0].creature.team):
+                                            manager.phaseMessage= manager.titleFont.render('You Win!!', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
+                                        else:
+                                            manager.phaseMessage= manager.titleFont.render('You lose :(', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
+                                        manager.refreshScreen()
+                                        time.sleep(15)
+                                        return 
+                                    
+                                    
                                 moveCounter = not moveCounter
                 clicked = None
 
