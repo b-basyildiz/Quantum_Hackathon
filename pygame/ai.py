@@ -122,6 +122,9 @@ class AI:
                 bestState = x
         return bestState, maxCost
 
+    def geneticAlgorithm():
+        pass
+
     def getWeights(graph):
         nodeToInt = {}
         intToNode = {}
