@@ -1,4 +1,5 @@
-from gameTest import Creature
+#from gameTest import Creature
+from creature import *
 import matplotlib.pyplot as plt
 import matplotlib.axes as axes
 import numpy as np
@@ -150,6 +151,7 @@ class AI:
         return bestState, maxCost
 
 
+    #def crBruteForce(graph):
 
     
 
