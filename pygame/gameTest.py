@@ -1,10 +1,18 @@
 import pygame, sys
+from pygame.locals import *
 import time
 import itertools
 from random import choice, sample
 from math import sqrt, ceil
 from ai import AI
 from cost_function import cost_function
+
+import networkx as nx
+import matplotlib.pyplot as plt
+import matplotlib.axes as axes
+import matplotlib.backends.backend_agg as agg
+import pylab
+
 
 from creature import *
 
@@ -23,8 +31,8 @@ font = pygame.font.Font(pygame.font.get_default_font(),32)
 
 PLAYER_COLOR = (63+50,0+50,15+50)
 COMPUTER_COLOR = (252,90,141)
-FONT_COLOR = (200,200,200)
-TITLE_FONT_COLOR = (235,235,220)
+FONT_COLOR = (240,240,240)
+TITLE_FONT_COLOR = FONT_COLOR#(235,235,220)
 TITLE_BACKGROUND_COLOR = (100,200,100)
 #NAMEPLATE_COLOR = (50,42,50)
 NAMEPLATE_COLOR = (0,0,0)
@@ -159,6 +167,10 @@ class Manager:
         self.titleFont = pygame.font.Font(pygame.font.get_default_font(),32)
         self.phaseMessage = self.titleFont.render('', True, FONT_COLOR, BACKGROUND_COLOR)
 
+        self.graphButtonMessage = self.titleFont.render('Display MaxCut Graph', True, NAMEPLATE_COLOR, FONT_COLOR)
+        self.graphButton = self.graphButtonMessage.get_rect()
+        self.graphButton.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT-75)#-SCREEN_HEIGHT*.95)
+
         self.entities = []
         self.screen = screen
         self.maxRowSize = maxRowSize
@@ -166,6 +178,8 @@ class Manager:
         self.screenHeight = screenHeight
         self.numEntities = 0
         self.entitySize = screenWidth/(2*maxRowSize) - screenWidth/30
+
+        self.drawGraph = False
 
     def addEntity(self, team, group, genes = (None, None, None)):
         self.entities.append(Entity(team, self.entitySize, group=group, genes = genes))
@@ -218,6 +232,14 @@ class Manager:
         tr = self.phaseMessage.get_rect()
         tr.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT-150)#-SCREEN_HEIGHT*.95)
         self.screen.blit(self.phaseMessage, tr)
+
+        # graph message
+        self.screen.blit(self.graphButtonMessage, self.graphButton)
+
+        if self.drawGraph:
+            self.graphImage = pygame.image.load("graph.png")
+            self.screen.blit(self.graphImage, (SCREEN_WIDTH+50, 100))
+            #self.drawImage(self.graphImage, (SCREEN_WIDTH+100, 0))
     
     def getArrangement(self):
         arrangement = []
@@ -424,6 +446,29 @@ class Manager:
         self.screen.blit(image, pos)#(self.entities[ind].posx, self.entities[ind].posy))
         pygame.display.flip()       
 
+    def saveMaxCutGraph(self):
+        ai = AI([entity.creature for entity in self.entities])
+        #ai.draw_graph()
+        G = ai.graph
+        default_axes = plt.axes(frameon=True)
+        nx.draw_networkx(G, node_color=['r' if (int(node[3:-1]) if node[0] != '-' else int(node[4:-1])) >= 0 else 'b' for node in G.nodes],\
+             node_size = 600, alpha = 0.8, ax = default_axes, pos = nx.spring_layout(G))
+        plt.savefig("graph.png",format="PNG")
+
+        #self.graphImage = pygame.image.load("graph.png")
+        #self.drawImage(self.graphImage, (SCREEN_WIDTH+100, 0))
+        #fig = pylab.figure(figsize=[4,4], dpi=100) 
+        ##ax = fig.gca()
+        #canvas = agg.FigureCanvasAgg(fig)
+        #canvas.draw()
+        #renderer = canvas.get_renderer()
+        #raw_data = renderer.tostring_rgb()
+
+        #image = pygame.image.fromstring(raw_data)#,  "RGB")
+        #self.screen.blit(image, (0,0))
+        #self.drawScreen()
+
+
     def getMove(self):
         creatures = [entity.creature for entity in self.entities]
         ai = AI(creatures)
@@ -439,6 +484,8 @@ class Manager:
             intToNode[nodeToInt[ii]] = ii
         optimalState, optimalScore = AI.optimizeBruteForce(ai.graph)
 
+        print('nodetoint',nodeToInt)
+        print([entity.creature.id for entity in self.entities])
 
         currentState = [int(creature.group) for creature in creatures]
         orderedOptimalState = []
@@ -456,7 +503,12 @@ class Manager:
         print('something went wrong in getMove')
         return None
 
-
+#def menu(screen):
+#    entitySurface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+#    entitySurface.fill(BACKGROUND_COLOR)
+#    print('menu')
+#    screen.blit(entitySurface, (entity.posx-self.entitySize,entity.posy-self.entitySize))
+#    pygame.display.flip()
 
 def main():
 
@@ -464,28 +516,90 @@ def main():
     screenHeight = SCREEN_HEIGHT
 
     #pygame.init()
-    screen = pygame.display.set_mode((screenWidth, screenHeight))
+    screen = pygame.display.set_mode((screenWidth, screenHeight))#, DOUBLEBUF)
 
     manager = Manager(screen, screenWidth, screenHeight)
 
+    #menu()
+    # MENU
+    entitySurface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    entitySurface.fill(BACKGROUND_COLOR)
+    screen.blit(entitySurface, (0,0))
 
-    if IS_AI_GAME:
-        manager.addEntity(True, group=True, genes = (True, True, True))
-        manager.addEntity(True, group=True, genes = (True, True, None))
-        manager.addEntity(False, group=False, genes = (False, False, False))
-        manager.addEntity(False, group=False, genes = (False, False, None))
+    titleCardFont = pygame.font.Font(pygame.font.get_default_font(),70)
+    title = titleCardFont.render('MILQ Simulator', True, FONT_COLOR, BACKGROUND_COLOR)
+    titleCard = title.get_rect()
+    titleCard.center = (SCREEN_WIDTH/2, 200)
+    screen.blit(title, titleCard)
 
-    else:
-        manager.addEntity(True, group=True, genes = (True, True, True))
-        manager.addEntity(True, group=True, genes = (True, True, None))
-        manager.addEntity(True, group=True, genes = (True, True, None))
-        manager.addEntity(True, group=True, genes = (True, None, None))
-        manager.addEntity(True, group=True, genes = (True, None, None))
-        manager.addEntity(False, group=False, genes = (False, False, False))
-        manager.addEntity(False, group=False, genes = (False, False, None))
-        manager.addEntity(False, group=False, genes = (False, False, None))
-        manager.addEntity(False, group=False, genes = (False, None, None))
-        manager.addEntity(False, group=False, genes = (False, None, None))
+    menuFont = pygame.font.Font(pygame.font.get_default_font(),32)
+    menu4Message= menuFont.render('Easy, small to simulate', True, PLAYER_COLOR, FONT_COLOR)
+    menu6Message= menuFont.render('Medium, computer beware', True, PLAYER_COLOR, FONT_COLOR)
+    menu10Message = menuFont.render('Hard, wait for heat death', True, PLAYER_COLOR, FONT_COLOR)
+
+    button4 = menu4Message.get_rect()
+    button4.center = (SCREEN_WIDTH/2, 400)#-SCREEN_HEIGHT*.95)
+    button6 = menu6Message.get_rect()
+    button6.center = (SCREEN_WIDTH/2, 500)#-SCREEN_HEIGHT*.95)
+    button10 = menu10Message.get_rect()
+    button10.center = (SCREEN_WIDTH/2, 600)#
+    screen.blit(menu4Message, button4)
+    screen.blit(menu6Message, button6)
+    screen.blit(menu10Message, button10)
+
+    pygame.display.flip()
+    #time.sleep(5)
+
+    # START IN MENU
+    difficulty = None
+    while difficulty is None:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: sys.exit()
+            if event.type == pygame.MOUSEBUTTONUP:
+                pos = pygame.mouse.get_pos()
+                if pos[0] >= button4.left and pos[0] <= button4.right and pos[1] >= button4.top and pos[1] <= button4.bottom:
+                    difficulty = 4
+                    manager.addEntity(True, group=True, genes = (True, True, True))
+                    manager.addEntity(True, group=True, genes = (True, True, None))
+                    manager.addEntity(False, group=False, genes = (False, False, False))
+                    manager.addEntity(False, group=False, genes = (False, False, None))
+                elif pos[0] >= button6.left and pos[0] <= button6.right and pos[1] >= button6.top and pos[1] <= button6.bottom:
+                    difficulty = 6
+                    manager.addEntity(True, group=True, genes = (True, True, True))
+                    manager.addEntity(True, group=True, genes = (True, True, None))
+                    manager.addEntity(True, group=True, genes = (True, None, None))
+                    manager.addEntity(False, group=False, genes = (False, False, False))
+                    manager.addEntity(False, group=False, genes = (False, False, None))
+                    manager.addEntity(False, group=False, genes = (False, None, None))
+                elif pos[0] >= button10.left and pos[0] <= button10.right and pos[1] >= button10.top and pos[1] <= button10.bottom:
+                    difficulty = 10
+                    manager.addEntity(True, group=True, genes = (True, True, True))
+                    manager.addEntity(True, group=True, genes = (True, True, None))
+                    manager.addEntity(True, group=True, genes = (True, True, None))
+                    manager.addEntity(True, group=True, genes = (True, None, None))
+                    manager.addEntity(True, group=True, genes = (True, None, None))
+                    manager.addEntity(False, group=False, genes = (False, False, False))
+                    manager.addEntity(False, group=False, genes = (False, False, None))
+                    manager.addEntity(False, group=False, genes = (False, False, None))
+                    manager.addEntity(False, group=False, genes = (False, None, None))
+                    manager.addEntity(False, group=False, genes = (False, None, None))
+    #if IS_AI_GAME:
+    #    manager.addEntity(True, group=True, genes = (True, True, True))
+    #    manager.addEntity(True, group=True, genes = (True, True, None))
+    #    manager.addEntity(False, group=False, genes = (False, False, False))
+    #    manager.addEntity(False, group=False, genes = (False, False, None))
+
+    #else:
+    #    manager.addEntity(True, group=True, genes = (True, True, True))
+    #    manager.addEntity(True, group=True, genes = (True, True, None))
+    #    manager.addEntity(True, group=True, genes = (True, True, None))
+    #    manager.addEntity(True, group=True, genes = (True, None, None))
+    #    manager.addEntity(True, group=True, genes = (True, None, None))
+    #    manager.addEntity(False, group=False, genes = (False, False, False))
+    #    manager.addEntity(False, group=False, genes = (False, False, None))
+    #    manager.addEntity(False, group=False, genes = (False, False, None))
+    #    manager.addEntity(False, group=False, genes = (False, None, None))
+    #    manager.addEntity(False, group=False, genes = (False, None, None))
     manager.age()
 
 
@@ -504,6 +618,8 @@ def main():
     activeCreature = None
     currentTurn = True
     moveCounter = False
+
+    #displayGraph = False
 
     while(True):
 
@@ -527,23 +643,36 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = pygame.mouse.get_pos()
+                # if display graph clicked
+                graphButton = manager.graphButton
+                if pos[0] >= graphButton.left and pos[0] <= graphButton.right and pos[1] >= graphButton.top and pos[1] <= graphButton.bottom:
+                    #displayGraph = not displayGraph
+                    manager.drawGraph = not manager.drawGraph
+                    screen = pygame.display.set_mode((screenWidth + 5/4*screenWidth*int(manager.drawGraph), screenHeight))#, DOUBLEBUF)
+                    manager.screen = screen
+                
+                if manager.drawGraph:
+                    manager.saveMaxCutGraph()
+
+                # if cow clicked
                 for ii in manager.entities:
                     if sqrt((ii.posx-pos[0])**2+(ii.posy-pos[1])**2) < blobWidth/2+blobGap:
                         if ii == clicked:
                             print(clicked.creature.team)
                             if ii.creature.team == currentTurn:
                                 ii.creature.move()
-
                                 currentTurn = not currentTurn
                                 if currentTurn:
                                     manager.phaseMessage= manager.titleFont.render('Brown to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
                                 elif IS_AI_GAME:
-                                    manager.phaseMessage= manager.titleFont.render('Quantum Cows deciding...', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
+                                    manager.phaseMessage= manager.titleFont.render('Quantum Cows colluding...', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
                                 else:
                                     manager.phaseMessage= manager.titleFont.render('Pink to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
                                 manager.refreshScreen()
                                 time.sleep(2)
                                 if not currentTurn and IS_AI_GAME:
+                                    if manager.drawGraph:
+                                        manager.saveMaxCutGraph()
                                     #manager.phaseMessage= manager.titleFont.render('Pink to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
                                     print('Bot is Thinking')
                                     manager.getMove().move()
