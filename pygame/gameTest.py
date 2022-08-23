@@ -11,11 +11,15 @@ font = pygame.font.Font(pygame.font.get_default_font(),32)
 PLAYER_COLOR = (63+50,0+50,15+50)
 COMPUTER_COLOR = (252,90,141)
 FONT_COLOR = (200,200,200)
+TITLE_FONT_COLOR = (235,235,220)
+TITLE_BACKGROUND_COLOR = (100,200,100)
 #NAMEPLATE_COLOR = (50,42,50)
 NAMEPLATE_COLOR = (0,0,0)
 BACKGROUND_COLOR = (100,200,100)
 
 TICK_RATE = 200
+SCREEN_WIDTH = 600
+SCREEN_HEIGHT = 900
 
 def dist(a, b):
     return sqrt((a[0]-b[0])**2+(a[1]-b[1])**2)
@@ -133,6 +137,8 @@ class Manager:
         scale = 4
         self.skullAndBonesImageDimension = (320/scale, 308/scale)
         self.skullAndBones = pygame.transform.scale(self.skullAndBones, self.skullAndBonesImageDimension)
+        self.titleFont = pygame.font.Font(pygame.font.get_default_font(),50)
+        self.phaseMessage = self.titleFont.render('', True, FONT_COLOR, BACKGROUND_COLOR)
 
         self.entities = []
         self.screen = screen
@@ -187,6 +193,12 @@ class Manager:
             self.screen.blit(entity.imageSprite, (entity.posx-entity.imageDimension[0]/2, entity.posy-entity.imageDimension[1]/2))
             self.screen.blit(entitySurface, (entity.posx-self.entitySize,entity.posy-self.entitySize))
             #self.screen.blit(entity.idLabel, tr)
+
+
+        # phase of game
+        tr = self.phaseMessage.get_rect()
+        tr.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT-100)#-SCREEN_HEIGHT*.95)
+        self.screen.blit(self.phaseMessage, tr)
     
     def getArrangement(self):
         arrangement = []
@@ -270,6 +282,9 @@ class Manager:
             #    exit(1)
 
     def breed(self):
+
+        self.phaseMessage= self.titleFont.render('Breed Phase', True, TITLE_FONT_COLOR, TITLE_BACKGROUND_COLOR)
+
         trueEntities = []
         falseEntities = []
         for ii in self.entities:
@@ -312,6 +327,9 @@ class Manager:
         time.sleep(2)
 
     def kill(self):
+        
+        self.phaseMessage= self.titleFont.render('Death Phase', True, TITLE_FONT_COLOR, TITLE_BACKGROUND_COLOR)
+
         trueEntities = []
         falseEntities = []
         for ii in range(len(self.entities)):
@@ -390,8 +408,8 @@ class Manager:
 
 def main():
 
-    screenWidth = 600
-    screenHeight = 900
+    screenWidth = SCREEN_WIDTH
+    screenHeight = SCREEN_HEIGHT
 
     #pygame.init()
     screen = pygame.display.set_mode((screenWidth, screenHeight))
@@ -432,6 +450,8 @@ def main():
         manager.clock.tick(3) 
 
         for event in pygame.event.get():
+
+            manager.phaseMessage= manager.titleFont.render('Movement Phase', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
             if event.type == pygame.QUIT: sys.exit()
 
 
