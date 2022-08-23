@@ -4,6 +4,13 @@ import itertools
 from random import choice, sample
 from math import sqrt, ceil
 
+
+#### FOR ME TO ADD
+# FENCE
+## LOVE MAKING ANIMATION
+## PLAYER TURN DISTINCTION
+# GRAPH VIS BUTTON
+
 pygame.init()
 pygame.font.init()
 font = pygame.font.Font(pygame.font.get_default_font(),32)
@@ -133,10 +140,16 @@ class Entity:
 class Manager:
     def __init__(self, screen, screenWidth, screenHeight, maxRowSize = 5):
         self.clock = pygame.time.Clock() # variables for running the game
+        self.heart = pygame.image.load('heart.png') # 320x290 https://www.freeiconspng.com/images/heart-png
+        scale = 8
+        self.heartImageDimension = (320/scale, 290/scale)
+        self.heart = pygame.transform.scale(self.heart, self.heartImageDimension)
+
         self.skullAndBones = pygame.image.load('skull-and-crossbones.png') # 320x308 https://www.freeiconspng.com/images/skull-and-crossbones-png
         scale = 4
         self.skullAndBonesImageDimension = (320/scale, 308/scale)
         self.skullAndBones = pygame.transform.scale(self.skullAndBones, self.skullAndBonesImageDimension)
+
         self.titleFont = pygame.font.Font(pygame.font.get_default_font(),50)
         self.phaseMessage = self.titleFont.render('', True, FONT_COLOR, BACKGROUND_COLOR)
 
@@ -324,6 +337,7 @@ class Manager:
                 creature.setPos(pos[0],pos[1])
                 self.drawScreen()
                 self.clock.tick(TICK_RATE)
+        self.drawImage(self.heart, (creature1.posx, creature1.posy-50))
         time.sleep(2)
 
     def kill(self):
@@ -451,7 +465,11 @@ def main():
 
         for event in pygame.event.get():
 
-            manager.phaseMessage= manager.titleFont.render('Movement Phase', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
+            if currentTurn:
+                manager.phaseMessage= manager.titleFont.render('Brown to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
+            else:
+                manager.phaseMessage= manager.titleFont.render('Pink to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
+
             if event.type == pygame.QUIT: sys.exit()
 
 
