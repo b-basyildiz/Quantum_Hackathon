@@ -151,7 +151,22 @@ class AI:
         return bestState, maxCost
 
 
-    #def crBruteForce(graph):
+    def crBruteForce(graph):
+        sub_lists = []
+        for i in range(0, len(graph.nodes())+1):
+            temp = [list(x) for x in combinations(graph.nodes(),i)] 
+            sub_lists.extend(temp)
+
+        # cost of all cuts 
+        cut_size = []
+        for sub_list in sub_lists:
+            cut_size.append(
+                (sub_list,nx.algorithms.cuts.cut_size(graph,sub_list,eweight='weight'))
+            )
+
+        # sort by cost
+        return sorted(cut_size, key=lambda item: item[1], reverse=True)
+
 
     
 
