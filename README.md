@@ -79,4 +79,9 @@ We then use [QAOA](https://arxiv.org/abs/1411.4028) to find the best solution to
 
 Please see the Hackathon_Math.pdf in the Documents folder for a more theoretical explanation.
 
+
+### How to Play 
+
+To play the game on your local machine, you will have to nagivate to the directory with the file 'MILQ_SIM.py'. Then, within your respective terminal run the 'MILQ_SIM.py' file. Make sure that the other files within the directory are not moved, as they are dependencies. A pygame window should show up, and then the game is ready to be played!  
+
 ### Future Possible Work?
