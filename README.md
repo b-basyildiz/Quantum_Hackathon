@@ -90,4 +90,6 @@ While we were deliberate on solving all bugs we have found, we are sure that the
 
 Mathematically, there is a serious of reductions that are necessary for computation, and all of these take away from the efficiency of the Quantum AI. An improvement can be made by creating a cost Hamiltonian that Quantum Annealing uses in one of the NAE SAT problems. This would enable our program to have a Quantum optimization with less mathematical overhead. 
 
+Lastly, we are using quantum simulations for our Quantum Simulated annealing. A direct extension of our game would be running it on an actual Quantum Comptuer. 
+
 
