@@ -39,11 +39,17 @@ First, the player will have the option to move one of their cows to the other fa
 
 <a href="url"><img src="colluding.png" align="center" height="350" width="250" ></a>
 
-A player must move one cow they control. All chocolate milk cows are governed by the player, no matter what farm they are on. Thus the player must strategically move their cows so that the chocolate milk cows outbreed the strawberry milk cows (Breeding will explain this in the next section). Similarly, the Quantum AI will also be forced to move one of their strawberry milk cows.
+As seen in the picture brown cow is mooved through the opposite side of the game. A player must move one cow they control. All chocolate milk cows are governed by the player, no matter what farm they are on. Thus the player must strategically move their cows so that the chocolate milk cows outbreed the strawberry milk cows (Breeding will explain this in the next section). Similarly, the Quantum AI will also be forced to move one of their strawberry milk cows.
 
 ### Breeding
 
-After both players move a respective cow, the breeding process takes place. On each farm, two random cows will choose to breed, and their offspring will be a strawberry or chocolate milk cow, depending on each cow's gene makeup.
+After both players move a respective cow, the breeding process takes place. On each farm, two random cows will choose to breed, and their offspring will be a strawberry or chocolate milk cow, depending on each cow's gene makeup. While breeding happening game will be like this:
+
+<a href="url"><img src="breed_phase.png" align="center" height="350" width="250" ></a>
+
+And after breeding it will like this;
+
+<a href="url"><img src="afterbreed.png" align="center" height="350" width="250" ></a>
 
 ### Genes
 
