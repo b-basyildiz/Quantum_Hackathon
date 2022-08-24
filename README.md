@@ -20,7 +20,7 @@ Create a working interactive ‘program’ (it can be a website, game, app, etc.
 
 ## Solution: **MILQ Simulator**
 
-As a solution we create MILQ simulator which is a party affliation congestion game and a really good example of the real world problem solution.
+As a solution we create MILQ simulator which is a party affliation congestion game.
 
 ### Game Description
 
@@ -65,7 +65,7 @@ The last mechanic in the MILQ Simulator game is the death mechanic. At the end o
 
 <a href="url"><img src="death_phase.png" align="center" height="350" width="250" ></a>
 
-As seen in the picture one cow will die.The probability of a cow dying is based on age, and it relates to how many turns the cow has been on the board.
+As seen in the picture one cow will die. The probability of a cow dying is based on age, and it relates to how many turns the cow has been on the board.
 
 ### Quantum AI
 
@@ -82,7 +82,12 @@ Please see the Hackathon_Math.pdf in the Documents folder for a more theoretical
 
 ### How to Play 
 
-To play the game on your local machine, you will have to nagivate to the directory with the file 'MILQ_SIM.py'. Then, within your respective terminal run the 'MILQ_SIM.py' file. Make sure that the other files within the directory are not moved, as they are dependencies. A pygame window should show up, and then the game is ready to be played!  
+To play the game on your local machine, you will have to nagivate to the directory with the file 'MILQ_SIM.py'. Then, within your respective terminal run the 'MILQ_SIM.py' file. Make sure that the other files within the directory are not moved, as they are dependencies. A pygame window should show up, and within the terminal the player will be prompted with three options. 
+  (a) Locally (for beefy computers)
+  (b) IBM remote (qiskit) + new token
+  (c) IBM remote (qiskit) + saved token
+  Input option a/b/c :
+The player should choose what option best fits their situation. For most first time players, the local option should be selected. Once an option is selected, the player will be prompted with a difficulty setting, and the game is ready to play! 
 
 ### Future Possible Work
 
