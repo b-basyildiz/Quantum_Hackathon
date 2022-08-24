@@ -20,7 +20,7 @@ Create a working interactive ‘program’ (it can be a website, game, app, etc.
 
 ## Solution: **MILQ Simulator**
 
-As a solution we create MILQ simulator which is a party affliation congestion game.
+As a solution we create MILQ simulator which is a party affliation congestion game and a really good example of the real world problem solution.
 
 ### Game Description
 
@@ -65,7 +65,7 @@ The last mechanic in the MILQ Simulator game is the death mechanic. At the end o
 
 <a href="url"><img src="death_phase.png" align="center" height="350" width="250" ></a>
 
-As seen in the picture one cow will die. The probability of a cow dying is based on age, and it relates to how many turns the cow has been on the board.
+As seen in the picture one cow will die.The probability of a cow dying is based on age, and it relates to how many turns the cow has been on the board.
 
 ### Quantum AI
 
