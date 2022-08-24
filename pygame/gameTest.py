@@ -4,7 +4,7 @@ import time
 import itertools
 from random import choice, sample
 from math import sqrt, ceil
-from ai import AI
+from ai import AI, draw_graph
 from cost_function import cost_function
 
 import networkx as nx
@@ -450,11 +450,16 @@ class Manager:
 
     def saveMaxCutGraph(self):
         ai = AI([entity.creature for entity in self.entities])
+
         #ai.draw_graph()
         G = ai.graph
-        default_axes = plt.axes(frameon=True)
-        nx.draw_networkx(G, node_color=['r' if (int(node[3:-1]) if node[0] != '-' else int(node[4:-1])) >= 0 else 'b' for node in G.nodes],\
-             node_size = 500, alpha = 0.8, ax = default_axes, pos = nx.spring_layout(G))
+
+        colors = ['b' for node in ai.graph.nodes()]
+        pos = nx.spring_layout(ai.graph)
+        draw_graph(G, colors, pos)
+        #default_axes = plt.axes(frameon=True)
+        #nx.draw_networkx(G, node_color=['r' if (int(node[3:-1]) if node[0] != '-' else int(node[4:-1])) >= 0 else 'b' for node in G.nodes],\
+        #     node_size = 500, alpha = 0.8, ax = default_axes, pos = nx.spring_layout(G))
         plt.savefig("graph.png",format="PNG")
 
         #self.graphImage = pygame.image.load("graph.png")
