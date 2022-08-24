@@ -44,11 +44,11 @@ The game has three distinct stages: the moo-ving stage, the breeding stage, and 
 
 First, the game will start like this;
 
-<a href="url"><img src="not_toggled.png" align="center" height="350" width="250" ></a>
+<a href="url"><img src="Images/not_toggled.png" align="center" height="350" width="250" ></a>
 
 Then, the player will have the option to move one of their cows to the other farmer's field. Which will be like this in the game. Because in this case we choose the right side of the brown cow.
 
-<a href="url"><img src="colluding.png" align="center" height="350" width="250" ></a>
+<a href="url"><img src="Images/colluding.png" align="center" height="350" width="250" ></a>
 
 As seen in the picture brown cow is mooved through the opposite side of the game. A player must move one cow they control. All chocolate milk cows are governed by the player, no matter what farm they are on. Thus the player must strategically move their cows so that the chocolate milk cows outbreed the strawberry milk cows (Breeding will explain this in the next section). Similarly, the Quantum AI will also be forced to move one of their strawberry milk cows.
 
@@ -56,11 +56,11 @@ As seen in the picture brown cow is mooved through the opposite side of the game
 
 After both players move a respective cow, the breeding process takes place. On each farm, two random cows will choose to breed, and their offspring will be a strawberry or chocolate milk cow, depending on each cow's gene makeup. While breeding happening game will be like this:
 
-<a href="url"><img src="breed_phase.png" align="center" height="350" width="250" ></a>
+<a href="url"><img src="Images/breed_phase.png" align="center" height="350" width="250" ></a>
 
 And after breeding it will like this;
 
-<a href="url"><img src="afterbreed.jpg" align="center" height="350" width="250" ></a>
+<a href="url"><img src="Images/afterbreed.jpg" align="center" height="350" width="250" ></a>
 
 ### Genes
 
@@ -70,7 +70,7 @@ Each cow has a set of three genes, and all three of those genes can be either br
 
 The last mechanic in the MILQ Simulator game is the death mechanic. At the end of each breeding stage, one cow from each respective farm dies which is given below;
 
-<a href="url"><img src="death_phase.png" align="center" height="350" width="250" ></a>
+<a href="url"><img src="Images/death_phase.png" align="center" height="350" width="250" ></a>
 
 As seen in the picture one cow will die. The probability of a cow dying is based on age, and it relates to how many turns the cow has been on the board.
 
