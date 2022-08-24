@@ -187,7 +187,7 @@ class AI:
 
         intCounter = 0
 
-        for ii in ai.graph.nodes:
+        for ii in graph.nodes:
             nodeToInt[ii] = intCounter
             intCounter += 1
         for ii in nodeToInt:
@@ -197,9 +197,9 @@ class AI:
         print(intToNode)
 
 
-        for ii in ai.graph.nodes:
-            for jj in ai.graph.nodes:
-                temp = ai.graph.get_edge_data(ii, jj, default = 0)
+        for ii in graph.nodes:
+            for jj in graph.nodes:
+                temp = graph.get_edge_data(ii, jj, default = 0)
                 if temp != 0:
                     weights[nodeToInt[ii], nodeToInt[jj]] = temp['weight']
 
@@ -218,7 +218,8 @@ class AI:
             for ii in range(len(qReg)):
                 for jj in range(len(qReg)):
                     if weights[ii, jj]:
-                        circuit.rzz(-a * weights[ii, jj]/maxWeight, qReg[ii], qReg[jj])
+                        if ii != jj:
+                            circuit.rzz(-a * weights[ii, jj]/maxWeight, qReg[ii], qReg[jj])
         circuit.measure(qReg, cReg)
         circuit.draw(output='mpl', style={'backgroundcolor': '#EEEEEE'}) 
 
@@ -229,14 +230,13 @@ class AI:
         counts = result.get_counts(circuit)  
 
         best = max(counts, key=counts.get)
-        print([int(ii) for ii in best])
+        best = [int(ii) for ii in best]
 
         cost = 0
         for i in range(nodeCount):
             for j in range(nodeCount):
                 cost = cost + weights[i, j] * int(best[i]) * (1-int(best[j]))       
-        print(best, cost)
-        pass
+        return best, cost
 
 
     

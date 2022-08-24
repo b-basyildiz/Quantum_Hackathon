@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.axes as axes
 import matplotlib.backends.backend_agg as agg
 import pylab
+from qiskit import Aer
 
 
 from creature import *
@@ -476,7 +477,7 @@ class Manager:
         #self.drawScreen()
 
 
-    def getMove(self):
+    def getMove(self, backend, timeSteps = 4):
         creatures = [entity.creature for entity in self.entities]
         ai = AI(creatures)
 
@@ -489,7 +490,7 @@ class Manager:
             intCounter += 1
         for ii in nodeToInt:
             intToNode[nodeToInt[ii]] = ii
-        optimalState, optimalScore = AI.optimizeBruteForce(ai.graph)
+        optimalState, optimalScore = AI.anneal(ai.graph, backend, timeSteps)
         currentState = [int(creature.group) for creature in creatures]
         orderedOptimalState = []
         botIndices = []
@@ -526,6 +527,7 @@ def main():
     print('##################################################')
     global USER_TOKEN
     isLocal = None
+    backend = None
     print('How will you run this game?\n\t(a) Locally (for beefy computers, will use classical optimizer)\n\t(b) IBM remote (qiskit) + new token\n\t(c) IBM remote (qiskit) + saved token')
     while isLocal not in ['a','b','c']:
         #isLocal = input('Will you run this game locally? (only for beefy computers) y/n:')
@@ -537,12 +539,15 @@ def main():
         print('Saving token to TOKEN.txt')
         with open('TOKEN.txt', 'w') as f:
             f.write(USER_TOKEN)
+        
     elif isLocal == 'c':
         with open('TOKEN.txt', 'r') as f:
             USER_TOKEN = f.readlines()[0]
         print('Read token ', USER_TOKEN)
     else:
         isLocal = True
+        backend = Aer.get_backend("qasm_simulator") 
+
         
 
 
@@ -709,7 +714,7 @@ def main():
                                         manager.saveMaxCutGraph()
                                     #manager.phaseMessage= manager.titleFont.render('Pink to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
                                     print('Bot is Thinking')
-                                    manager.getMove().move()
+                                    manager.getMove(backend=backend).move()
                                     manager.refreshScreen()
                                     time.sleep(2)
                                     currentTurn = not currentTurn
