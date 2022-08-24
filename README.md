@@ -20,7 +20,14 @@ Create a working interactive ‘program’ (it can be a website, game, app, etc.
 
 ## Solution: **MILQ Simulator**
 
+You are humanity's last hope. 
+
+Chocolate milk cows are under threat of extinction by quantum strawberry milk cows. These quantum strawberry milk cows are a terrifying breed who communicate with a hive-mind, that moves each member of the heard by solving a quantum optimization problem. They will achieve this goal by out-breeding the chocolate gene; you must defend 
+chocolate milk by attempting to do the same to the strawberry milk cows.
+
 As a solution we create MILQ simulator which is a party affliation congestion game.
+
+The quantum AI works as follows: each game-state can be represented as a not-all-equal boolean satisfiability problem. The solution to this problem is the Nash Equilibrium of the game; no party can move away from equilibrium and only benefit themselves. Therefore, the quantum AI will only make moves towards the Nash equilibrium. If the player makes any move away from equilibrium, they will be punished and likely loose. The Quantum AI section of the README will go into more detail about how this works. 
 
 ### Game Description
 
@@ -75,7 +82,7 @@ First, our game is defined as a congestion game, which can be reduced to the [No
 
 We can further reduce the NAE SAT problem to [NAE 3-SAT](https://npcomplete.owu.edu/2014/07/22/not-all-equal-3sat/) and reduce it a final time to the well-studied [Max-Flow problem](https://www.geeksforgeeks.org/max-flow-problem-introduction/) (All reductions are polynomial time).
 
-We then use gate based [Quantum Annealing](https://arxiv.org/abs/1411.4028) to find the best solution to the Max-Flow problem, and we use this solution to generate the next move in our congestion game.
+We then use gate based [Quantum Annealing](https://arxiv.org/abs/1411.4028) to find the best solution to the Max-Flow problem, and we use this solution to generate the next move in our congestion game. The circuit is an alternating sequence of a mixing and cost Hamiltonian, which will start with a $\pi/2$ amplitude on $H_{mix}$ and $0$ on $H_{cost}$, and smoothly ramp between the two until $H_{mix}$ has amplitude $0$ and $H_{cost}$ has amplitude $\pi/2$ on the final time-step. We then take the $\sigma^z$ basis state which appears the most in measurement. We will not prove this part, as this is a hackathon, but heavy theoretical work has been done to prove the quantum adiabatic theorem and its annealing application. The bonus of this approach is that it removes the variational element of the typical QAOA alogrithm, thus heavily improving the overhead. This may make the game more susceptible to noise on real hardware.
 
 Please see the Hackathon_Math.pdf in the Documents folder for a more theoretical explanation.
 
