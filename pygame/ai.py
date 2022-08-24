@@ -1,4 +1,5 @@
-from gameTest import Creature
+#from gameTest import Creature
+from creature import *
 import matplotlib.pyplot as plt
 import matplotlib.axes as axes
 import numpy as np
@@ -22,6 +23,7 @@ from itertools import combinations
 
 
 
+USER_TOKEN = None
 
 varCounter = -1
 
@@ -46,6 +48,7 @@ class AI:
                     self.vars.append(jj[0])
         print(f'number of variables: {len(self.vars)}')
         self.graph = AI.Nae3ToGraph(self.vars, self.clauses)
+        print(self.graph.nodes)
 
 
     def draw_graph(self):
@@ -74,8 +77,10 @@ class AI:
     def NaeToNae3(clause):
         global varCounter
         k = len(clause)
-        if k < 2:
+        if k == 0:
             return []
+        if k == 1:
+            return [[(clause[0], True),(clause[0], True),(clause[0], True)]]
         if k == 2:
             varCounter -= 1
             return [[(clause[0], True), (clause[1], True), (Placeholder(varCounter+1), True)],\
@@ -191,6 +196,7 @@ class AI:
         print(nodeToInt)
         print(intToNode)
 
+
         for ii in ai.graph.nodes:
             for jj in ai.graph.nodes:
                 temp = ai.graph.get_edge_data(ii, jj, default = 0)
@@ -232,6 +238,7 @@ class AI:
         print(best, cost)
         pass
 
+
     
 
 
@@ -264,6 +271,8 @@ if __name__ == '__main__':
     #backend = Aer.get_backend("qasm_simulator")        
     nodeCount = len(ai.graph.nodes)
     weights = np.zeros([nodeCount, nodeCount])
+    print('now testing quantum...')
+
     AI.anneal(ai.graph, backend, 4)
 
     nodeToInt = {}
@@ -301,7 +310,6 @@ if __name__ == '__main__':
     for ii in intToNode:
         print(f'{intToNode[ii]}: {bestState[ii]}')
 
-    print('now testing quantum...')
     # maxCut = Maxcut(weights)
     # qp = maxCut.to_quadratic_program()
     # qubitOp, offset =  qp.to_ising()
@@ -339,4 +347,3 @@ if __name__ == '__main__':
     # print('solution objective:', qp.objective.evaluate(x))
 
     plt.show()
-    print(len(gates))
