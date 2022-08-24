@@ -495,8 +495,6 @@ class Manager:
         orderedOptimalState = []
         botIndices = []
         for creature in creatures:
-            print(nodeToInt)
-            print(entity.creature.id for entity in self.entities)
             orderedOptimalState.append(optimalState[nodeToInt['X_('+str(creature.id)+')']])
         for ii in range(len(creatures)):
             if not creatures[ii].team:
