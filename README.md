@@ -75,7 +75,7 @@ First, our game is defined as a congestion game, which can be reduced to the [No
 
 We can further reduce the NAE SAT problem to [NAE 3-SAT](https://npcomplete.owu.edu/2014/07/22/not-all-equal-3sat/) and reduce it a final time to the well-studied [Max-Flow problem](https://www.geeksforgeeks.org/max-flow-problem-introduction/) (All reductions are polynomial time).
 
-We then use [QAOA](https://arxiv.org/abs/1411.4028) to find the best solution to the Max-Flow problem, and we use this solution to generate the next move in our congestion game.
+We then use gate based [Quantum Annealing](https://arxiv.org/abs/1411.4028) to find the best solution to the Max-Flow problem, and we use this solution to generate the next move in our congestion game.
 
 Please see the Hackathon_Math.pdf in the Documents folder for a more theoretical explanation.
 
