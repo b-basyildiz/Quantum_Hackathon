@@ -221,7 +221,7 @@ class AI:
                         if ii != jj:
                             circuit.rzz(-a * weights[ii, jj]/maxWeight, qReg[ii], qReg[jj])
         circuit.measure(qReg, cReg)
-        circuit.draw(output='mpl', style={'backgroundcolor': '#EEEEEE'}) 
+        #circuit.draw(output='mpl', style={'backgroundcolor': '#EEEEEE'}) 
 
         job = execute(circuit, backend, shots = 2000)
 
