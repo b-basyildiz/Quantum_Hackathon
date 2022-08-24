@@ -94,7 +94,12 @@ To play the game on your local machine, you will have to nagivate to the directo
   
 The player should choose what option best fits their situation. For most first time players, the local option should be selected. Once an option is selected, the player will be prompted with a difficulty setting, and the game is ready to play! 
 
-### Future Possible Work
+
+### Educational Application 
+
+For those unfamiliar, our game is a great introduction into the applications of Quantum Computing. First, our game takes no knowledge of Quantum Computing, STEM, or any high level problem solving to play. Thus sheer simplicity of our game attracts new people to see the direct use of Quantum Computing (the Quantum AI). Also, if the player is interested in the theory behind the game, they can toggle the graph function or check out the mathematical theory that is contained in the Hackathon_Math.pdf file in Documents folder. 
+
+### Future Possible Work 
 
 While we were deliberate on solving all bugs we have found, we are sure that there are more that will be found if the game has thorough usage. Also, even though the GUI has a great 8-bit feel, to fully actualize our game the GUI must be updated and worked on further. 
 
