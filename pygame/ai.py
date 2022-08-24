@@ -22,6 +22,7 @@ from qiskit.circuit.library import TwoLocal
 
 
 
+USER_TOKEN = None
 
 varCounter = -1
 

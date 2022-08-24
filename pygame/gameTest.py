@@ -4,7 +4,7 @@ import time
 import itertools
 from random import choice, sample
 from math import sqrt, ceil
-from ai import AI, draw_graph
+from ai import AI, draw_graph, USER_TOKEN
 from cost_function import cost_function
 
 import networkx as nx
@@ -519,6 +519,33 @@ class Manager:
         
 
 def main():
+
+    print('##################################################')
+    print('WELCOME TO MILQ Simulator!!!!!!')
+    print('\tJust a few questions before we start...')
+    print('##################################################')
+    global USER_TOKEN
+    isLocal = None
+    print('How will you run this game?\n\t(a) Locally (for beefy computers, will use classical optimizer)\n\t(b) IBM remote (qiskit) + new token\n\t(c) IBM remote (qiskit) + saved token')
+    while isLocal not in ['a','b','c']:
+        #isLocal = input('Will you run this game locally? (only for beefy computers) y/n:')
+        isLocal = input('Input option a/b/c :')
+
+    if isLocal == 'b':
+        isLocal = False
+        USER_TOKEN = input('Input you IBM user cloud token (I promise we can be trusted):')
+        print('Saving token to TOKEN.txt')
+        with open('TOKEN.txt', 'w') as f:
+            f.write(USER_TOKEN)
+    elif isLocal == 'c':
+        with open('TOKEN.txt', 'r') as f:
+            USER_TOKEN = f.readlines()[0]
+        print('Read token ', USER_TOKEN)
+    else:
+        isLocal = True
+        
+    print(USER_TOKEN)
+    exit(1)
 
     screenWidth = SCREEN_WIDTH
     screenHeight = SCREEN_HEIGHT
