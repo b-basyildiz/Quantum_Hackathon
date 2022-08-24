@@ -167,7 +167,7 @@ class Manager:
         self.titleFont = pygame.font.Font(pygame.font.get_default_font(),32)
         self.phaseMessage = self.titleFont.render('', True, FONT_COLOR, BACKGROUND_COLOR)
 
-        self.graphButtonMessage = self.titleFont.render('Display MaxCut Graph', True, NAMEPLATE_COLOR, FONT_COLOR)
+        self.graphButtonMessage = self.titleFont.render('Toggle MaxCut Graph', True, NAMEPLATE_COLOR, FONT_COLOR)
         self.graphButton = self.graphButtonMessage.get_rect()
         self.graphButton.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT-75)#-SCREEN_HEIGHT*.95)
 
@@ -194,6 +194,8 @@ class Manager:
         self.arrangeEntities()
 
     def drawEntities(self):
+        # fence
+        pygame.draw.rect(self.screen, FONT_COLOR, pygame.Rect(0, SCREEN_HEIGHT/3, SCREEN_WIDTH, 10))
 
         for entity in self.entities:
             entitySurface = pygame.Surface((self.entitySize*2, self.entitySize*2))
@@ -452,7 +454,7 @@ class Manager:
         G = ai.graph
         default_axes = plt.axes(frameon=True)
         nx.draw_networkx(G, node_color=['r' if (int(node[3:-1]) if node[0] != '-' else int(node[4:-1])) >= 0 else 'b' for node in G.nodes],\
-             node_size = 600, alpha = 0.8, ax = default_axes, pos = nx.spring_layout(G))
+             node_size = 500, alpha = 0.8, ax = default_axes, pos = nx.spring_layout(G))
         plt.savefig("graph.png",format="PNG")
 
         #self.graphImage = pygame.image.load("graph.png")
@@ -685,6 +687,8 @@ def main():
                                     manager.age()
                                     manager.breed()
                                     manager.kill()
+                                    manager.saveMaxCutGraph()
+                                    manager.refreshScreen()
                                     if(manager.endCheck()):
                                         print("End game")
                                         if(manager.entities[0].creature.team):
