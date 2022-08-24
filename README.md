@@ -35,7 +35,7 @@ The game has three distinct stages: the moo-ving stage, the breeding stage, and 
 
 ### Moo-ving Cows
 
-First, the player will have the option to move one of their cows to the other farmer's field. Which will be like this in the game. 
+First, the player will have the option to move one of their cows to the other farmer's field. Which will be like this in the game.
 
 ![Mooving Cows](colluding.png)
 
