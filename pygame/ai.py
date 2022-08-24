@@ -46,6 +46,7 @@ class AI:
                     self.vars.append(jj[0])
         print(f'number of variables: {len(self.vars)}')
         self.graph = AI.Nae3ToGraph(self.vars, self.clauses)
+        print(self.graph.nodes)
 
 
     def draw_graph(self):
@@ -74,8 +75,10 @@ class AI:
     def NaeToNae3(clause):
         global varCounter
         k = len(clause)
-        if k < 2:
+        if k == 0:
             return []
+        if k == 1:
+            return [[(clause[0], True),(clause[0], True),(clause[0], True)]]
         if k == 2:
             varCounter -= 1
             return [[(clause[0], True), (clause[1], True), (Placeholder(varCounter+1), True)],\
