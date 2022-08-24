@@ -35,7 +35,11 @@ The game has three distinct stages: the moo-ving stage, the breeding stage, and 
 
 ### Moo-ving Cows
 
-First, the player will have the option to move one of their cows to the other farmer's field. Which will be like this in the game.
+First, the game will start like this;
+
+<a href="url"><img src="not_toggled.png" align="center" height="350" width="250" ></a>
+
+Then, the player will have the option to move one of their cows to the other farmer's field. Which will be like this in the game. Because in this case we choose the right side of the brown cow.
 
 <a href="url"><img src="colluding.png" align="center" height="350" width="250" ></a>
 
@@ -49,7 +53,7 @@ After both players move a respective cow, the breeding process takes place. On e
 
 And after breeding it will like this;
 
-<a href="url"><img src="afterbreed.png" align="center" height="350" width="250" ></a>
+<a href="url"><img src="afterbreed.jpg" align="center" height="350" width="250" ></a>
 
 ### Genes
 
@@ -57,7 +61,11 @@ Each cow has a set of three genes, and all three of those genes can be either br
 
 ### Death
 
-The last mechanic in the MILQ Simulator game is the death mechanic. At the end of each breeding stage, one cow from each respective farm dies. The probability of a cow dying is based on age, and it relates to how many turns the cow has been on the board.
+The last mechanic in the MILQ Simulator game is the death mechanic. At the end of each breeding stage, one cow from each respective farm dies which is given below;
+
+<a href="url"><img src="death_phase.png" align="center" height="350" width="250" ></a>
+
+As seen in the picture one cow will die. The probability of a cow dying is based on age, and it relates to how many turns the cow has been on the board.
 
 ### Quantum AI
 
