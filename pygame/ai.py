@@ -18,6 +18,7 @@ from qiskit.tools.visualization import circuit_drawer
 from qiskit.utils import algorithm_globals, QuantumInstance
 from qiskit.algorithms.optimizers import SPSA
 from qiskit.circuit.library import TwoLocal
+from itertools import combinations
 
 
 
@@ -130,6 +131,29 @@ class AI:
     def geneticAlgorithm():
         pass
 
+    def solve_graph(graph):
+        ''' exactly what it says '''
+        # calculate all possible cuts
+        sub_lists = []
+        for i in range(0, len(graph.nodes())+1):
+            temp = [list(x) for x in combinations(graph.nodes(), i)]
+            sub_lists.extend(temp)
+    
+        # calculate cost of all cuts
+        cut_size = 0
+        bestCutSize = 0
+        bestCut = sub_lists[0]
+        for sub_list in sub_lists:
+            cut_size = (sub_list,nx.algorithms.cuts.cut_size(graph,sub_list,weight='weight'))
+            if cut_size > bestCutSize:
+                bestCutSize = cut_size
+                bestCut = sub_list
+            
+        # sort by the cost; we know this brute force approach works
+        return bestCut
+
+
+
     def getWeights(graph):
         nodeToInt = {}
         intToNode = {}
@@ -154,22 +178,65 @@ class AI:
         bestState, maxCost = AI.bruteForce(AI.getWeights(graph))
         return bestState, maxCost
 
+    def anneal(graph, backend, timeSteps):
+        nodeCount = len(graph.nodes)
+        weights = np.zeros([nodeCount, nodeCount])
 
-    def crBruteForce(graph):
-        sub_lists = []
-        for i in range(0, len(graph.nodes())+1):
-            temp = [list(x) for x in combinations(graph.nodes(),i)] 
-            sub_lists.extend(temp)
+        nodeToInt = {}
+        intToNode = {}
 
-        # cost of all cuts 
-        cut_size = []
-        for sub_list in sub_lists:
-            cut_size.append(
-                (sub_list,nx.algorithms.cuts.cut_size(graph,sub_list,eweight='weight'))
-            )
+        intCounter = 0
 
-        # sort by cost
-        return sorted(cut_size, key=lambda item: item[1], reverse=True)
+        for ii in ai.graph.nodes:
+            nodeToInt[ii] = intCounter
+            intCounter += 1
+        for ii in nodeToInt:
+            intToNode[nodeToInt[ii]] = ii
+
+        print(nodeToInt)
+        print(intToNode)
+
+
+        for ii in ai.graph.nodes:
+            for jj in ai.graph.nodes:
+                temp = ai.graph.get_edge_data(ii, jj, default = 0)
+                if temp != 0:
+                    weights[nodeToInt[ii], nodeToInt[jj]] = temp['weight']
+
+        maxWeight = np.amax(weights)
+
+        qReg = QuantumRegister(nodeCount)
+        cReg = ClassicalRegister(nodeCount)
+        circuit = QuantumCircuit(qReg, cReg)
+        for ii in qReg:
+            circuit.h(ii)
+        for t in range(timeSteps):
+            a = (t+1)/(timeSteps+1)/2
+            b = 1/2-a
+            for ii in qReg:
+                circuit.rx(b, ii)
+            for ii in range(len(qReg)):
+                for jj in range(len(qReg)):
+                    if weights[ii, jj]:
+                        circuit.rzz(-a * weights[ii, jj]/maxWeight, qReg[ii], qReg[jj])
+        circuit.measure(qReg, cReg)
+        circuit.draw(output='mpl', style={'backgroundcolor': '#EEEEEE'}) 
+
+        job = execute(circuit, backend, shots = 2000)
+
+        result = job.result()
+
+        counts = result.get_counts(circuit)  
+
+        best = max(counts, key=counts.get)
+        print([int(ii) for ii in best])
+
+        cost = 0
+        for i in range(nodeCount):
+            for j in range(nodeCount):
+                cost = cost + weights[i, j] * int(best[i]) * (1-int(best[j]))       
+        print(best, cost)
+        pass
 
 
     
@@ -187,9 +254,11 @@ def draw_graph(G, colors, pos):
     edge_labels = nx.get_edge_attributes(G,'weight')
     nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=edge_labels, ax=default_axes)
 
+    
+
 if __name__ == '__main__':
     tf = [True, False]
-    creatures = [Creature(True , True , True , True ), Creature(True, True, True, None), Creature(True, True, None, None)]
+    creatures = [Creature(choice(tf) , choice(tf) , choice(tf) , choice(tf) ) for ii in range(10)]
     ai = AI(creatures)
     colors = ['b' for node in ai.graph.nodes()]
     pos = nx.spring_layout(ai.graph)
@@ -198,10 +267,13 @@ if __name__ == '__main__':
     #plt.show()
 
     provider = IBMQ.load_account()
-    #backend = provider.get_backend('simulator_extended_stabilizer')
-    backend = Aer.get_backend("aer_simulator")        
+    backend = provider.get_backend('simulator_mps')
+    #backend = Aer.get_backend("qasm_simulator")        
     nodeCount = len(ai.graph.nodes)
     weights = np.zeros([nodeCount, nodeCount])
+    print('now testing quantum...')
+
+    AI.anneal(ai.graph, backend, 4)
 
     nodeToInt = {}
     intToNode = {}
@@ -238,48 +310,40 @@ if __name__ == '__main__':
     for ii in intToNode:
         print(f'{intToNode[ii]}: {bestState[ii]}')
 
-    print('now testing quantum...')
+    # maxCut = Maxcut(weights)
+    # qp = maxCut.to_quadratic_program()
+    # qubitOp, offset =  qp.to_ising()
+    # tstr = str(qubitOp).split('\n')
+    # gates = [ii.split(' ')[-1] for ii in tstr]
+    # qReg = QuantumRegister(nodeCount)
+    # cReg = ClassicalRegister(nodeCount)
+    # circuit = QuantumCircuit(qReg, cReg)
+    # for t in range(timeSteps):
+    #     for ii in qReg:
+    #         circuit.h(ii)
+    #     for ii in qReg:
+    #         circuit.rx(2, ii)
+    # for layer in gates:
+    #     qubits = []
+    #     for qubit in range(len(layer)):
 
-    maxCut = Maxcut(weights)
-    qp = maxCut.to_quadratic_program()
-    qubitOp, offset =  qp.to_ising()
-    tstr = str(qubitOp).split('\n')
-    gates = [ii.split(' ')[-1] for ii in tstr]
-    print(gates)
-    qReg = QuantumRegister(nodeCount)
-    cReg = ClassicalRegister(nodeCount)
-    circuit = QuantumCircuit(qReg, cReg)
-    for ii in qReg:
-        circuit.h(ii)
-    for ii in qReg:
-        circuit.rx(2, ii)
-    for layer in gates:
-        qubits = []
-        for qubit in range(len(layer)):
-
-            if layer[qubit] == 'Z':
-                qubits.append(qubit)
-        circuit.rzz(weights[qubits[0], qubits[1]], qReg[qubits[0]], qReg[qubits[1]])
-    circuit.measure(qReg, cReg)
-    circuit.draw(output='mpl', style={'backgroundcolor': '#EEEEEE'}) 
-
-    #job = execute(circuit, backend, shots = 1000)
-
-    #result = job.result()
-
-    #counts = result.get_counts(circuit)
-    #print(counts)
-    print('starting quantum')
-    quantum_instance = QuantumInstance(backend, seed_simulator=10598, seed_transpiler=10598)
-    spsa = SPSA(maxiter=300)
-    ry = TwoLocal(qubitOp.num_qubits, 'ry', 'cz', reps=5, entanglement='linear')
-    vqe = VQE(ry, optimizer = spsa, quantum_instance=quantum_instance)
-    result = vqe.compute_minimum_eigenvalue(qubitOp)
-    x = maxCut.sample_most_likely(result.eigenstate)
-    print('energy:', result.eigenvalue.real)
-    print('max-cut objective:', result.eigenvalue.real + offset)
-    print('solution:', x)
-    print('solution objective:', qp.objective.evaluate(x))
+    #         if layer[qubit] == 'Z':
+    #             qubits.append(qubit)
+    #     circuit.rzz(weights[qubits[0], qubits[1]], qReg[qubits[0]], qReg[qubits[1]])
+    # circuit.measure(qReg, cReg)
+    # circuit.draw(output='mpl', style={'backgroundcolor': '#EEEEEE'}) 
+    
+    # #print(counts)
+    # print('starting quantum')
+    # quantum_instance = QuantumInstance(backend, seed_simulator=10598, seed_transpiler=10598)
+    # spsa = SPSA(maxiter=5)
+    # ry = TwoLocal(qubitOp.num_qubits, 'ry', 'cz', reps=5, entanglement='linear')
+    # vqe = VQE(ry, optimizer = spsa, quantum_instance=quantum_instance)
+    # result = vqe.compute_minimum_eigenvalue(qubitOp)
+    # x = maxCut.sample_most_likely(result.eigenstate)
+    # print('energy:', result.eigenvalue.real)
+    # print('max-cut objective:', result.eigenvalue.real + offset)
+    # print('solution:', x)
+    # print('solution objective:', qp.objective.evaluate(x))
 
     plt.show()
-    print(len(gates))

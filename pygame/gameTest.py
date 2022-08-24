@@ -544,8 +544,7 @@ def main():
     else:
         isLocal = True
         
-    print(USER_TOKEN)
-    exit(1)
+
 
     screenWidth = SCREEN_WIDTH
     screenHeight = SCREEN_HEIGHT
