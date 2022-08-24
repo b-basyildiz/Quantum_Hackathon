@@ -83,10 +83,15 @@ Please see the Hackathon_Math.pdf in the Documents folder for a more theoretical
 ### How to Play 
 
 To play the game on your local machine, you will have to nagivate to the directory with the file 'MILQ_SIM.py'. Then, within your respective terminal run the 'MILQ_SIM.py' file. Make sure that the other files within the directory are not moved, as they are dependencies. A pygame window should show up, and within the terminal the player will be prompted with three options. 
+
   (a) Locally (for beefy computers)
-  (b) IBM remote (qiskit) + new token
+  
+  (b) IBM remote (qiskit) + new token'
+  
   (c) IBM remote (qiskit) + saved token
+  
   Input option a/b/c :
+  
 The player should choose what option best fits their situation. For most first time players, the local option should be selected. Once an option is selected, the player will be prompted with a difficulty setting, and the game is ready to play! 
 
 ### Future Possible Work
