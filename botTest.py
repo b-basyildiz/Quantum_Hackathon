@@ -1,29 +1,10 @@
 import pygame, sys
-from pygame.locals import *
 import time
 import itertools
 from random import choice, sample
 from math import sqrt, ceil
-from ai import AI, draw_graph, USER_TOKEN
+from ai import AI
 from cost_function import cost_function
-
-import networkx as nx
-import matplotlib.pyplot as plt
-import matplotlib.axes as axes
-import matplotlib.backends.backend_agg as agg
-import pylab
-from qiskit import Aer, IBMQ
-
-
-from creature import *
-
-#### FOR ME TO ADD
-# FENCE
-## LOVE MAKING ANIMATION
-## PLAYER TURN DISTINCTION
-# GRAPH VIS BUTTON
-
-IS_AI_GAME = True
 
 
 pygame.init()
@@ -32,58 +13,56 @@ font = pygame.font.Font(pygame.font.get_default_font(),32)
 
 PLAYER_COLOR = (63+50,0+50,15+50)
 COMPUTER_COLOR = (252,90,141)
-FONT_COLOR = (240,240,240)
-TITLE_FONT_COLOR = FONT_COLOR#(235,235,220)
+FONT_COLOR = (200,200,200)
+TITLE_FONT_COLOR = (235,235,220)
 TITLE_BACKGROUND_COLOR = (100,200,100)
 #NAMEPLATE_COLOR = (50,42,50)
 NAMEPLATE_COLOR = (0,0,0)
 BACKGROUND_COLOR = (100,200,100)
 
 TICK_RATE = 200
-SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 900
 
 def dist(a, b):
     return sqrt((a[0]-b[0])**2+(a[1]-b[1])**2)
 
 
-#class Creature:
-#
-#    __id_iter__ = itertools.count()
-#    def __init__(self, team: bool, a = None, b = None, c = None):
-#        self.team = team
-#        self.group = team
-#        self.genes = {'a': a, 'b': b, 'c': c}
-#        self.id = next(Creature.__id_iter__)
-#        self.age = 0
-#
-#    def breed(self, other):
-#        offspring = Creature(self.team)
-#        for ii in self.genes:
-#            if self.genes[ii] != None and other.genes[ii] == None:
-#                offspring.genes[ii] = self.genes[ii]
-#            elif self.genes[ii] == None and other.genes[ii] != None:
-#                offspring.genes[ii] = other.genes[ii]
-#            elif self.genes[ii] != None and other.genes[ii] != None:
-#                offspring.genes[ii] = choice([self.genes[ii], other.genes[ii]])
-#        numGenes = {True: 0, False: 0}
-#        for ii in offspring.genes:
-#            if offspring.genes[ii] != None:
-#                numGenes[offspring.genes[ii]] += 1
-#        offspring.team = self.team if numGenes[True] == numGenes[False] else \
-#            numGenes[True] > numGenes[False]
-#        offspring.group = self.group
-#        print(f'new creature: {offspring.id}')
-#
-#        return offspring
-#
-#    def print(self):
-#        print(f'creature id: {self.id}\nteam: {self.team}\ngenes: \
-#            {self.genes}\ngroup: {self.group}\nage: {self.age}\n')
-#
-#    def move(self):
-#        self.group = not self.group
-#
+class Creature:
+
+    __id_iter__ = itertools.count()
+    def __init__(self, team: bool, a = None, b = None, c = None):
+        self.team = team
+        self.group = team
+        self.genes = {'a': a, 'b': b, 'c': c}
+        self.id = next(Creature.__id_iter__)
+        self.age = 0
+
+    def breed(self, other):
+        offspring = Creature(self.team)
+        for ii in self.genes:
+            if self.genes[ii] != None and other.genes[ii] == None:
+                offspring.genes[ii] = self.genes[ii]
+            elif self.genes[ii] == None and other.genes[ii] != None:
+                offspring.genes[ii] = other.genes[ii]
+            elif self.genes[ii] != None and other.genes[ii] != None:
+                offspring.genes[ii] = choice([self.genes[ii], other.genes[ii]])
+        numGenes = {True: 0, False: 0}
+        for ii in offspring.genes:
+            if offspring.genes[ii] != None:
+                numGenes[offspring.genes[ii]] += 1
+        offspring.team = self.team if numGenes[True] == numGenes[False] else \
+            numGenes[True] > numGenes[False]
+        offspring.group = self.group
+        print(f'new creature: {offspring.id}')
+
+        return offspring
+
+    def print(self):
+        print(f'creature id: {self.id}\nteam: {self.team}\ngenes: \
+            {self.genes}\ngroup: {self.group}\nage: {self.age}\n')
+
+    def move(self):
+        self.group = not self.group
+
 class Entity:
     def __init__(self, team: bool,size, group = None, posx = 0, posy = 0, genes = (None, None, None)):
         self.creature = Creature(team, a = genes[0], b = genes[1], c = genes[2])
@@ -155,22 +134,10 @@ class Entity:
 class Manager:
     def __init__(self, screen, screenWidth, screenHeight, maxRowSize = 5):
         self.clock = pygame.time.Clock() # variables for running the game
-        self.heart = pygame.image.load('heart.png') # 320x290 https://www.freeiconspng.com/images/heart-png
-        scale = 8
-        self.heartImageDimension = (320/scale, 290/scale)
-        self.heart = pygame.transform.scale(self.heart, self.heartImageDimension)
-
         self.skullAndBones = pygame.image.load('skull-and-crossbones.png') # 320x308 https://www.freeiconspng.com/images/skull-and-crossbones-png
         scale = 4
         self.skullAndBonesImageDimension = (320/scale, 308/scale)
         self.skullAndBones = pygame.transform.scale(self.skullAndBones, self.skullAndBonesImageDimension)
-
-        self.titleFont = pygame.font.Font(pygame.font.get_default_font(),32)
-        self.phaseMessage = self.titleFont.render('', True, FONT_COLOR, BACKGROUND_COLOR)
-
-        self.graphButtonMessage = self.titleFont.render('Toggle MaxCut Graph', True, NAMEPLATE_COLOR, FONT_COLOR)
-        self.graphButton = self.graphButtonMessage.get_rect()
-        self.graphButton.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT-75)#-SCREEN_HEIGHT*.95)
 
         self.entities = []
         self.screen = screen
@@ -180,24 +147,19 @@ class Manager:
         self.numEntities = 0
         self.entitySize = screenWidth/(2*maxRowSize) - screenWidth/30
 
-        self.drawGraph = False
-
     def addEntity(self, team, group, genes = (None, None, None)):
         self.entities.append(Entity(team, self.entitySize, group=group, genes = genes))
         self.numEntities += 1
         self.arrangeEntities()
 
-    def addEntityFromCreature(self, creature, pos):
+    def addEntityFromCreature(self, creature):
         newEntity = Entity(False, 0)
         newEntity.makeFromCreature(creature, self.entitySize)
-        newEntity.setPos(pos[0], pos[1])
         self.entities.append(newEntity)
         self.numEntities += 1
         self.arrangeEntities()
 
     def drawEntities(self):
-        # fence
-        pygame.draw.rect(self.screen, FONT_COLOR, pygame.Rect(0, SCREEN_HEIGHT/3, SCREEN_WIDTH, 10))
 
         for entity in self.entities:
             entitySurface = pygame.Surface((self.entitySize*2, self.entitySize*2))
@@ -230,20 +192,6 @@ class Manager:
             self.screen.blit(entity.imageSprite, (entity.posx-entity.imageDimension[0]/2, entity.posy-entity.imageDimension[1]/2))
             self.screen.blit(entitySurface, (entity.posx-self.entitySize,entity.posy-self.entitySize))
             #self.screen.blit(entity.idLabel, tr)
-
-
-        # phase of game
-        tr = self.phaseMessage.get_rect()
-        tr.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT-150)#-SCREEN_HEIGHT*.95)
-        self.screen.blit(self.phaseMessage, tr)
-
-        # graph message
-        self.screen.blit(self.graphButtonMessage, self.graphButton)
-
-        if self.drawGraph:
-            self.graphImage = pygame.image.load("graph.png")
-            self.screen.blit(self.graphImage, (SCREEN_WIDTH+50, 100))
-            #self.drawImage(self.graphImage, (SCREEN_WIDTH+100, 0))
     
     def getArrangement(self):
         arrangement = []
@@ -327,9 +275,6 @@ class Manager:
             #    exit(1)
 
     def breed(self):
-
-        self.phaseMessage= self.titleFont.render('Breed Phase', True, TITLE_FONT_COLOR, TITLE_BACKGROUND_COLOR)
-
         trueEntities = []
         falseEntities = []
         for ii in self.entities:
@@ -347,12 +292,11 @@ class Manager:
             # do breeding animation
             self.animateBreed(True, trueBreeders[0], trueBreeders[1])
             self.addEntityFromCreature(Creature.breed(trueBreeders[0].creature, \
-                trueBreeders[1].creature), (SCREEN_WIDTH/2, SCREEN_HEIGHT/2-200))
+                trueBreeders[1].creature))
         if falseBreeders:
             self.animateBreed(False, falseBreeders[0], falseBreeders[1])
             self.addEntityFromCreature(Creature.breed(falseBreeders[0].creature, \
-                falseBreeders[1].creature),(SCREEN_WIDTH/2, SCREEN_HEIGHT/2-100))
-            
+                falseBreeders[1].creature))
         self.arrangeEntities()
 
     def animateBreed(self, group, creature1, creature2):
@@ -370,13 +314,9 @@ class Manager:
                 creature.setPos(pos[0],pos[1])
                 self.drawScreen()
                 self.clock.tick(TICK_RATE)
-        self.drawImage(self.heart, (creature1.posx, creature1.posy-50))
         time.sleep(2)
 
     def kill(self):
-        
-        self.phaseMessage = self.titleFont.render('Death Phase', True, TITLE_FONT_COLOR, TITLE_BACKGROUND_COLOR)
-
         trueEntities = []
         falseEntities = []
         for ii in range(len(self.entities)):
@@ -449,37 +389,9 @@ class Manager:
         self.screen.fill(BACKGROUND_COLOR)
         self.drawEntities()
         self.screen.blit(image, pos)#(self.entities[ind].posx, self.entities[ind].posy))
-        pygame.display.flip()       
+        pygame.display.flip()   
 
-    def saveMaxCutGraph(self):
-        ai = AI([entity.creature for entity in self.entities])
-
-        #ai.draw_graph()
-        G = ai.graph
-
-        colors = ['b' for node in ai.graph.nodes()]
-        pos = nx.spring_layout(ai.graph)
-        draw_graph(G, colors, pos)
-        #default_axes = plt.axes(frameon=True)
-        #nx.draw_networkx(G, node_color=['r' if (int(node[3:-1]) if node[0] != '-' else int(node[4:-1])) >= 0 else 'b' for node in G.nodes],\
-        #     node_size = 500, alpha = 0.8, ax = default_axes, pos = nx.spring_layout(G))
-        plt.savefig("graph.png",format="PNG")
-
-        #self.graphImage = pygame.image.load("graph.png")
-        #self.drawImage(self.graphImage, (SCREEN_WIDTH+100, 0))
-        #fig = pylab.figure(figsize=[4,4], dpi=100) 
-        ##ax = fig.gca()
-        #canvas = agg.FigureCanvasAgg(fig)
-        #canvas.draw()
-        #renderer = canvas.get_renderer()
-        #raw_data = renderer.tostring_rgb()
-
-        #image = pygame.image.fromstring(raw_data)#,  "RGB")
-        #self.screen.blit(image, (0,0))
-        #self.drawScreen()
-
-
-    def getMove(self, backend, timeSteps = 4):
+    def getMove(self):
         creatures = [entity.creature for entity in self.entities]
         ai = AI(creatures)
 
@@ -492,7 +404,9 @@ class Manager:
             intCounter += 1
         for ii in nodeToInt:
             intToNode[nodeToInt[ii]] = ii
-        optimalState, optimalScore = AI.anneal(ai.graph, backend, timeSteps)
+        optimalState, optimalScore = AI.optimizeBruteForce(ai.graph)
+
+
         currentState = [int(creature.group) for creature in creatures]
         orderedOptimalState = []
         botIndices = []
@@ -509,140 +423,31 @@ class Manager:
         print('something went wrong in getMove')
         return None
 
-    def endCheck(self):
-        color = self.entities[0].creature.team
-        for entity in self.entities:
-            if entity.creature.team != color:
-                return False
-        return True 
-                
-      
-        
+
+
+
+
 
 def main():
 
-    print('##################################################')
-    print('WELCOME TO MILQ Simulator!!!!!!')
-    print('\tJust a few questions before we start...')
-    print('##################################################')
-    global USER_TOKEN
-    isLocal = None
-    backend = None
-    print('How will you run this game?\n\t(a) Locally\n\t(b) IBM remote (qiskit) + new token\n\t(c) IBM remote (qiskit) + saved token')
-    while isLocal not in ['a','b','c']:
-        #isLocal = input('Will you run this game locally? (only for beefy computers) y/n:')
-        isLocal = input('Input option a/b/c :')
-
-    if isLocal == 'b':
-        isLocal = False
-        USER_TOKEN = input('Input you IBM user cloud token (I promise we can be trusted):')
-        print('Saving token to TOKEN.txt')
-        with open('TOKEN.txt', 'w') as f:
-            f.write(USER_TOKEN)
-        provider = IBMQ.enable_account(USER_TOKEN)
-        backend = provider.get_backend('simulator_mps')
-        
-    elif isLocal == 'c':
-        with open('TOKEN.txt', 'r') as f:
-            USER_TOKEN = f.readlines()[0]
-        print('Read token ', USER_TOKEN)
-        provider = IBMQ.enable_account(USER_TOKEN)
-        backend = provider.get_backend('simulator_mps')
-    else:
-        isLocal = True
-        backend = Aer.get_backend("qasm_simulator") 
-
-        
-
-
-    screenWidth = SCREEN_WIDTH
-    screenHeight = SCREEN_HEIGHT
+    screenWidth = 600
+    screenHeight = 900
 
     #pygame.init()
-    screen = pygame.display.set_mode((screenWidth, screenHeight))#, DOUBLEBUF)
+    screen = pygame.display.set_mode((screenWidth, screenHeight))
 
     manager = Manager(screen, screenWidth, screenHeight)
 
-    #menu()
-    # MENU
-    entitySurface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-    entitySurface.fill(BACKGROUND_COLOR)
-    screen.blit(entitySurface, (0,0))
-
-    titleCardFont = pygame.font.Font(pygame.font.get_default_font(),70)
-    title = titleCardFont.render('MILQ Simulator', True, FONT_COLOR, BACKGROUND_COLOR)
-    titleCard = title.get_rect()
-    titleCard.center = (SCREEN_WIDTH/2, 200)
-    screen.blit(title, titleCard)
-
-    menuFont = pygame.font.Font(pygame.font.get_default_font(),32)
-    menu4Message= menuFont.render('Easy, for babies', True, PLAYER_COLOR, FONT_COLOR)
-    menu6Message= menuFont.render('Medium, computer beware', True, PLAYER_COLOR, FONT_COLOR)
-    menu10Message = menuFont.render('Hard, wait for heat death', True, PLAYER_COLOR, FONT_COLOR)
-
-    button4 = menu4Message.get_rect()
-    button4.center = (SCREEN_WIDTH/2, 400)#-SCREEN_HEIGHT*.95)
-    button6 = menu6Message.get_rect()
-    button6.center = (SCREEN_WIDTH/2, 500)#-SCREEN_HEIGHT*.95)
-    button10 = menu10Message.get_rect()
-    button10.center = (SCREEN_WIDTH/2, 600)#
-    screen.blit(menu4Message, button4)
-    screen.blit(menu6Message, button6)
-    screen.blit(menu10Message, button10)
-
-    pygame.display.flip()
-    #time.sleep(5)
-
-    # START IN MENU
-    difficulty = None
-    while difficulty is None:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT: sys.exit()
-            if event.type == pygame.MOUSEBUTTONUP:
-                pos = pygame.mouse.get_pos()
-                if pos[0] >= button4.left and pos[0] <= button4.right and pos[1] >= button4.top and pos[1] <= button4.bottom:
-                    difficulty = 4
-                    manager.addEntity(True, group=True, genes = (True, True, True))
-                    manager.addEntity(True, group=True, genes = (True, True, None))
-                    manager.addEntity(False, group=False, genes = (False, False, False))
-                    manager.addEntity(False, group=False, genes = (False, False, None))
-                elif pos[0] >= button6.left and pos[0] <= button6.right and pos[1] >= button6.top and pos[1] <= button6.bottom:
-                    difficulty = 6
-                    manager.addEntity(True, group=True, genes = (True, True, True))
-                    manager.addEntity(True, group=True, genes = (True, True, None))
-                    manager.addEntity(True, group=True, genes = (True, None, None))
-                    manager.addEntity(False, group=False, genes = (False, False, False))
-                    manager.addEntity(False, group=False, genes = (False, False, None))
-                    manager.addEntity(False, group=False, genes = (False, None, None))
-                elif pos[0] >= button10.left and pos[0] <= button10.right and pos[1] >= button10.top and pos[1] <= button10.bottom:
-                    difficulty = 10
-                    manager.addEntity(True, group=True, genes = (True, True, True))
-                    manager.addEntity(True, group=True, genes = (True, True, None))
-                    manager.addEntity(True, group=True, genes = (True, True, None))
-                    manager.addEntity(True, group=True, genes = (True, None, None))
-                    manager.addEntity(True, group=True, genes = (True, None, None))
-                    manager.addEntity(False, group=False, genes = (False, False, False))
-                    manager.addEntity(False, group=False, genes = (False, False, None))
-                    manager.addEntity(False, group=False, genes = (False, False, None))
-                    manager.addEntity(False, group=False, genes = (False, None, None))
-                    manager.addEntity(False, group=False, genes = (False, None, None))
-    #if IS_AI_GAME:
-    #    manager.addEntity(True, group=True, genes = (True, True, True))
-    #    manager.addEntity(True, group=True, genes = (True, True, None))
-    #    manager.addEntity(False, group=False, genes = (False, False, False))
-    #    manager.addEntity(False, group=False, genes = (False, False, None))
-
-    #else:
-    #    manager.addEntity(True, group=True, genes = (True, True, True))
-    #    manager.addEntity(True, group=True, genes = (True, True, None))
-    #    manager.addEntity(True, group=True, genes = (True, True, None))
-    #    manager.addEntity(True, group=True, genes = (True, None, None))
-    #    manager.addEntity(True, group=True, genes = (True, None, None))
-    #    manager.addEntity(False, group=False, genes = (False, False, False))
-    #    manager.addEntity(False, group=False, genes = (False, False, None))
-    #    manager.addEntity(False, group=False, genes = (False, False, None))
-    #    manager.addEntity(False, group=False, genes = (False, None, None))
-    #    manager.addEntity(False, group=False, genes = (False, None, None))
+    manager.addEntity(True, group=True, genes = (True, True, True))
+    manager.addEntity(True, group=True, genes = (True, True, None))
+    #manager.addEntity(True, group=True, genes = (True, True, None))
+    #manager.addEntity(True, group=True, genes = (True, None, None))
+    #manager.addEntity(True, group=True, genes = (True, None, None))
+    manager.addEntity(False, group=False, genes = (False, False, False))
+    manager.addEntity(False, group=False, genes = (False, False, None))
+    #manager.addEntity(False, group=False, genes = (False, False, None))
+    #manager.addEntity(False, group=False, genes = (False, None, None))
+    #manager.addEntity(False, group=False, genes = (False, None, None))
     manager.age()
 
 
@@ -662,19 +467,11 @@ def main():
     currentTurn = True
     moveCounter = False
 
-    #displayGraph = False
-
     while(True):
 
         manager.clock.tick(3) 
 
         for event in pygame.event.get():
-
-            if currentTurn:
-                manager.phaseMessage= manager.titleFont.render('Brown to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
-            else:
-                manager.phaseMessage= manager.titleFont.render('Pink to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
-
             if event.type == pygame.QUIT: sys.exit()
 
 
@@ -686,39 +483,18 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = pygame.mouse.get_pos()
-                # if display graph clicked
-                graphButton = manager.graphButton
-                if pos[0] >= graphButton.left and pos[0] <= graphButton.right and pos[1] >= graphButton.top and pos[1] <= graphButton.bottom:
-                    #displayGraph = not displayGraph
-                    manager.drawGraph = not manager.drawGraph
-                    screen = pygame.display.set_mode((screenWidth + 5/4*screenWidth*int(manager.drawGraph), screenHeight))#, DOUBLEBUF)
-                    manager.screen = screen
-                
-                if manager.drawGraph:
-                    manager.saveMaxCutGraph()
-
-                # if cow clicked
                 for ii in manager.entities:
                     if sqrt((ii.posx-pos[0])**2+(ii.posy-pos[1])**2) < blobWidth/2+blobGap:
                         if ii == clicked:
                             print(clicked.creature.team)
                             if ii.creature.team == currentTurn:
                                 ii.creature.move()
-                                currentTurn = not currentTurn
-                                if currentTurn:
-                                    manager.phaseMessage= manager.titleFont.render('Brown to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
-                                elif IS_AI_GAME:
-                                    manager.phaseMessage= manager.titleFont.render('Quantum Cows colluding...', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
-                                else:
-                                    manager.phaseMessage= manager.titleFont.render('Pink to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
                                 manager.refreshScreen()
                                 time.sleep(2)
-                                if not currentTurn and IS_AI_GAME:
-                                    if manager.drawGraph:
-                                        manager.saveMaxCutGraph()
-                                    #manager.phaseMessage= manager.titleFont.render('Pink to Moove', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
+                                currentTurn = not currentTurn
+                                if not currentTurn:
                                     print('Bot is Thinking')
-                                    manager.getMove(backend=backend).move()
+                                    manager.getMove().move()
                                     manager.refreshScreen()
                                     time.sleep(2)
                                     currentTurn = not currentTurn
@@ -727,19 +503,6 @@ def main():
                                     manager.age()
                                     manager.breed()
                                     manager.kill()
-                                    manager.saveMaxCutGraph()
-                                    manager.refreshScreen()
-                                    if(manager.endCheck()):
-                                        print("End game")
-                                        if(manager.entities[0].creature.team):
-                                            manager.phaseMessage= manager.titleFont.render('You Win!!', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
-                                        else:
-                                            manager.phaseMessage= manager.titleFont.render('You lose :(', True, TITLE_FONT_COLOR, BACKGROUND_COLOR)
-                                        manager.refreshScreen()
-                                        time.sleep(15)
-                                        return 
-                                    
-                                    
                                 moveCounter = not moveCounter
                 clicked = None
 
