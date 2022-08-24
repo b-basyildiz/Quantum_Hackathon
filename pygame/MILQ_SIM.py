@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.axes as axes
 import matplotlib.backends.backend_agg as agg
 import pylab
-from qiskit import Aer
+from qiskit import Aer, IBMQ
 
 
 from creature import *
@@ -187,9 +187,10 @@ class Manager:
         self.numEntities += 1
         self.arrangeEntities()
 
-    def addEntityFromCreature(self, creature):
+    def addEntityFromCreature(self, creature, pos):
         newEntity = Entity(False, 0)
         newEntity.makeFromCreature(creature, self.entitySize)
+        newEntity.setPos(pos[0], pos[1])
         self.entities.append(newEntity)
         self.numEntities += 1
         self.arrangeEntities()
@@ -346,11 +347,12 @@ class Manager:
             # do breeding animation
             self.animateBreed(True, trueBreeders[0], trueBreeders[1])
             self.addEntityFromCreature(Creature.breed(trueBreeders[0].creature, \
-                trueBreeders[1].creature))
+                trueBreeders[1].creature), (SCREEN_WIDTH/2, SCREEN_HEIGHT/2-200))
         if falseBreeders:
             self.animateBreed(False, falseBreeders[0], falseBreeders[1])
             self.addEntityFromCreature(Creature.breed(falseBreeders[0].creature, \
-                falseBreeders[1].creature))
+                falseBreeders[1].creature),(SCREEN_WIDTH/2, SCREEN_HEIGHT/2-100))
+            
         self.arrangeEntities()
 
     def animateBreed(self, group, creature1, creature2):
@@ -526,7 +528,7 @@ def main():
     global USER_TOKEN
     isLocal = None
     backend = None
-    print('How will you run this game?\n\t(a) Locally (for beefy computers, will use classical optimizer)\n\t(b) IBM remote (qiskit) + new token\n\t(c) IBM remote (qiskit) + saved token')
+    print('How will you run this game?\n\t(a) Locally\n\t(b) IBM remote (qiskit) + new token\n\t(c) IBM remote (qiskit) + saved token')
     while isLocal not in ['a','b','c']:
         #isLocal = input('Will you run this game locally? (only for beefy computers) y/n:')
         isLocal = input('Input option a/b/c :')
@@ -537,11 +539,15 @@ def main():
         print('Saving token to TOKEN.txt')
         with open('TOKEN.txt', 'w') as f:
             f.write(USER_TOKEN)
+        provider = IBMQ.enable_account(USER_TOKEN)
+        backend = provider.get_backend('simulator_mps')
         
     elif isLocal == 'c':
         with open('TOKEN.txt', 'r') as f:
             USER_TOKEN = f.readlines()[0]
         print('Read token ', USER_TOKEN)
+        provider = IBMQ.enable_account(USER_TOKEN)
+        backend = provider.get_backend('simulator_mps')
     else:
         isLocal = True
         backend = Aer.get_backend("qasm_simulator") 
@@ -570,7 +576,7 @@ def main():
     screen.blit(title, titleCard)
 
     menuFont = pygame.font.Font(pygame.font.get_default_font(),32)
-    menu4Message= menuFont.render('Easy, small to simulate', True, PLAYER_COLOR, FONT_COLOR)
+    menu4Message= menuFont.render('Easy, for babies', True, PLAYER_COLOR, FONT_COLOR)
     menu6Message= menuFont.render('Medium, computer beware', True, PLAYER_COLOR, FONT_COLOR)
     menu10Message = menuFont.render('Hard, wait for heat death', True, PLAYER_COLOR, FONT_COLOR)
 
